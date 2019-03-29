@@ -16,14 +16,22 @@
 // along with Extensions Sync.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-imports.searchPath.unshift(imports.misc.extensionUtils.getCurrentExtension().path);
+window.mtt = {
+  imports: imports.misc.extensionUtils.getCurrentExtension().imports
+}
+
+const { logger } = mtt.imports.utils;
+
+const debug = logger('mtt');
 
 function init() {
-
+  debug('init');
 }
 
 function enable() {
+  debug('enable');
 }
 
 function disable() {
+  debug('disable');
 }
