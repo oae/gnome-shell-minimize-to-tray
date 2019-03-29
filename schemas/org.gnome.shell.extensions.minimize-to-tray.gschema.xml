@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="gnome-shell-extensions">
+  <schema path="/org/gnome/shell/extensions/minimize-to-tray/" id="org.gnome.shell.extensions.minimize-to-tray">
+
+  </schema>
+</schemalist>
