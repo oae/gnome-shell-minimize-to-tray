@@ -17,34 +17,26 @@
 
 window.mtt = {
   imports: imports.misc.extensionUtils.getCurrentExtension().imports,
-  debug: true
+  debug: true,
 };
 
 const { logger } = mtt.imports.utils;
 
-const { WindowManager } = mtt.imports.windowManager;
 const { WindowListener } = mtt.imports.windowListener;
-const { Tray } = mtt.imports.tray;
 
-const debug = logger("mtt");
+const debug = logger('mtt');
 
 function init() {
-  debug("init");
-  mtt.wm = new WindowManager();
+  debug('init');
   mtt.wl = new WindowListener();
-  mtt.tray = new Tray();
 }
 
 function enable() {
-  debug("enable");
-  mtt.wm.enable();
+  debug('enable');
   mtt.wl.enable();
-  mtt.tray.enable();
 }
 
 function disable() {
-  debug("disable");
-  mtt.tray.disable();
+  debug('disable');
   mtt.wl.disable();
-  mtt.wm.disable();
 }

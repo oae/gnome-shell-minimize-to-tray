@@ -15,75 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Minimize to Tray.  If not, see <http://www.gnu.org/licenses/>.
 
-const Shell = imports.gi.Shell;
 const GLib = imports.gi.GLib;
-const ByteArray = imports.byteArray;
 
-var logger = prefix => content =>
-  mtt.debug && log(`[minimize-to-tray] [${prefix}] ${content}`);
-
-var getApp = win => {
-  const tracker = Shell.WindowTracker.get_default();
-  const app = tracker.get_window_app(win.get_meta_window());
-
-  return app ? app.get_id() : "";
-};
-
-var getTitle = win => {
-  return win.get_meta_window().get_title();
-};
-
-var getWmClass = win => {
-  return win.get_meta_window().get_wm_class();
-};
-
-var getWindowIdInDec = win => {
-  const [result, stdout, stderr] = GLib.spawn_command_line_sync(
-    `xdotool search --onlyvisible --all --class '${getWmClass(win)}'`
-  );
-
-  return ByteArray.toString(stdout).split("\n")[0];
-};
-
-var getWindowIdInHex = win => {
-  const [result, stdout, stderr] = GLib.spawn_command_line_sync(
-    `xdotool search --onlyvisible --all --class '${getWmClass(win)}'`
-  );
-
-  return `0x0${parseInt(ByteArray.toString(stdout).split("\n")[0]).toString(
-    16
-  )}`;
-};
-
-var createWindow = win => ({
-  idDec: getWindowIdInDec(win),
-  idHex: getWindowIdInHex(win),
-  wmClass: getWmClass(win),
-  title: getTitle(win),
-  app: getApp(win)
-});
-
-var matchWindow = (win, regex) => {
-  const appStr = `${getApp(win)}##${getWmClass(win)}`;
-
-  return new RegExp(regex).test(appStr);
-};
-
-var hideWindow = win => {
-  GLib.spawn_command_line_async(`xdotool windowunmap ${win.idDec}`);
-};
-
-var showWindow = win => {
-  GLib.spawn_command_line_async(`xdotool windowmap ${win.idDec}`);
-};
-
-var isMinimized = win => {
-  return win.get_meta_window().minimized;
-};
-
-var diff = (arr1, arr2) => {
-  return arr1.filter(i => arr2.indexOf(i) < 0);
-};
+var logger = prefix => content => mtt.debug && log(`[minimize-to-tray] [${prefix}] ${content}`);
 
 var setTimeout = (func, millis) => {
   return GLib.timeout_add(GLib.PRIORITY_DEFAULT, millis, () => {
@@ -109,7 +43,7 @@ var clearInterval = id => GLib.Source.remove(id);
 
 function isObject(value) {
   const type = typeof value;
-  return value != null && (type == "object" || type == "function");
+  return value != null && (type == 'object' || type == 'function');
 }
 
 function debounce(func, wait, options) {
@@ -120,15 +54,15 @@ function debounce(func, wait, options) {
   let maxing = false;
   let trailing = true;
 
-  if (typeof func != "function") {
-    throw new TypeError("Expected a function");
+  if (typeof func != 'function') {
+    throw new TypeError('Expected a function');
   }
   wait = +wait || 0;
   if (isObject(options)) {
     leading = !!options.leading;
-    maxing = "maxWait" in options;
+    maxing = 'maxWait' in options;
     maxWait = maxing ? Math.max(+options.maxWait || 0, wait) : maxWait;
-    trailing = "trailing" in options ? !!options.trailing : trailing;
+    trailing = 'trailing' in options ? !!options.trailing : trailing;
   }
 
   function invokeFunc(time) {
@@ -163,9 +97,7 @@ function debounce(func, wait, options) {
     const timeSinceLastInvoke = time - lastInvokeTime;
     const timeWaiting = wait - timeSinceLastCall;
 
-    return maxing
-      ? Math.min(timeWaiting, maxWait - timeSinceLastInvoke)
-      : timeWaiting;
+    return maxing ? Math.min(timeWaiting, maxWait - timeSinceLastInvoke) : timeWaiting;
   }
 
   function shouldInvoke(time) {

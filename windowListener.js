@@ -15,45 +15,96 @@
 // You should have received a copy of the GNU General Public License
 // along with Minimize to Tray.  If not, see <http://www.gnu.org/licenses/>.
 
-const { logger, debounce } = mtt.imports.utils;
+const Shell = imports.gi.Shell;
 
-const debug = logger("window-listener");
+const { logger, debounce, setInterval, clearInterval } = mtt.imports.utils;
+
+const { getApp, windowExists } = mtt.imports.windowUtils;
+
+const { AppWindow } = mtt.imports.appWindow;
+
+const debug = logger('window-listener');
 
 var WindowListener = class WindowListener {
   constructor() {
-    debug("initialized");
+    debug('initialized');
+    this.apps = ['Spotify', 'Terminal'];
+    this.appWindows = [];
   }
 
   enable() {
-    this.windowCreateHandler = global.display.connect(
-      "window-created",
-      debounce(() => this._onWindowCreate(), 250)
+    const onUpdate = debounce(this._onUpdate.bind(this), 250);
+
+    this.windowMinimizeHandler = global.window_manager.connect('minimize', (_, win) =>
+      this._onWindowMinimize.call(this, win.metaWindow),
     );
-    this.windowMinimizeHandler = global.window_manager.connect(
-      "minimize",
-      (_, win) => this._onWindowMinimize(win)
+    this.windowDestroyHandler = global.window_manager.connect('destroy', onUpdate);
+    this.windowCreateHandler = global.display.connect('window-created', onUpdate);
+    this.windowChangeHandler = Shell.WindowTracker.get_default().connect(
+      'tracked-windows-changed',
+      onUpdate,
     );
-    this.windowDestroyHandler = global.window_manager.connect(
-      "destroy",
-      debounce(() => this._onWindowClose(), 250)
-    );
+
+    this.trayInterval = setInterval(() => {
+      this.appWindows = this.appWindows.filter(appWin => {
+        if (!windowExists(appWin.pid)) {
+          appWin.removeTray();
+          return false;
+        }
+
+        return true;
+      });
+    }, 200);
   }
 
   disable() {
-    global.window_manager.disconnect(this.windowDestroyHandler);
-    global.window_manager.disconnect(this.windowMinimizeHandler);
+    clearInterval(this.trayInterval);
+    Shell.WindowTracker.get_default().disconnect(this.windowChangeHandler);
     global.display.disconnect(this.windowCreateHandler);
+    global.window_manager.disconnect(this.windowMinimizeHandler);
+    global.window_manager.disconnect(this.windowDestroyHandler);
+    this.appWindows.forEach(appWindow => {
+      appWindow.show();
+      appWindow.removeTray();
+      appWindow.addCloseButton();
+    });
+    this.appWindows = [];
   }
 
-  _onWindowCreate() {
-    mtt.wm.updateWindows();
+  _onUpdate() {
+    let windows = global.get_window_actors();
+    for (let i = 0; i < windows.length; i++) {
+      let metaWindow = windows[i].metaWindow;
+
+      if (!metaWindow._mttManaged) {
+        metaWindow.connect('unmanaged', this._onUpdate.bind(this));
+        metaWindow._mttManaged = true;
+      }
+      let app = getApp(metaWindow);
+
+      if (
+        app != null &&
+        !app.is_window_backed() &&
+        this.apps.indexOf(app.get_name()) >= 0 &&
+        this.appWindows.filter(appWin => metaWindow.get_pid() === appWin.pid).length === 0
+      ) {
+        const appWindow = new AppWindow(metaWindow);
+        this.appWindows.push(appWindow);
+        debug(`added new window: ${JSON.stringify(appWindow)}`);
+        appWindow.removeCloseButton();
+        appWindow.addTray();
+      }
+    }
   }
 
-  _onWindowMinimize(win) {
-    mtt.wm.moveToTray(win);
-  }
+  _onWindowMinimize(metaWindow) {
+    const matchingWindows = this.appWindows.filter(appWin => metaWindow.get_pid() === appWin.pid);
 
-  _onWindowClose() {
-    mtt.wm.updateWindows();
+    if (matchingWindows.length == 0) {
+      return;
+    }
+
+    const foundWindow = matchingWindows[0];
+    foundWindow.hide();
   }
 };
