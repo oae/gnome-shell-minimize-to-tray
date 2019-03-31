@@ -19,13 +19,25 @@
     {
       "label": "Watch Logs",
       "type": "shell",
-      "command": "journalctl /usr/bin/gnome-shell -f -o cat | grep \"\\[extensions-sync\\]\"",
+      "command": "journalctl /usr/bin/gnome-shell -f -o cat | grep \"\\[minimize-to-tray\\]\"",
+      "problemMatcher": []
+    },
+    {
+      "label": "Watch All Logs",
+      "type": "shell",
+      "command": "journalctl /usr/bin/gnome-shell -f -o cat | grep -v  'iconGrid\\|icon is undefined\\|_legacy'",
       "problemMatcher": []
     },
     {
       "label": "Install Extension",
       "type": "shell",
       "command": "make install",
+      "problemMatcher": []
+    },
+    {
+      "label": "Enable Debug",
+      "type": "shell",
+      "command": "busctl --user call org.gnome.Shell /org/gnome/Shell org.gnome.Shell Eval s 'window.mtt.debug = true;'",
       "problemMatcher": []
     },
     {

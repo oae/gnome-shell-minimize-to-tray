@@ -5,6 +5,8 @@ Minimize any app to tray on close
 ## TODO
 
 - [ ] Create a preference page for users to filter apps for minimizing
+  - [ ] Should be a field for regex
+  - [ ] Should be a field for disabling close button (Warn for CSD apps)
 - [ ] Listen all window related events to map user's apps
 
   ```js
@@ -13,6 +15,12 @@ Minimize any app to tray on close
       // TODO: hide window, put tray icon
     }
   });
+  handler = global.window_manager.connect('destroy', (_, win) => {
+    if(matchWindow(win, 'spotify.*##Spotify##Spotify')) {
+      // TODO: on destroy
+    }
+  });
+  global.display.connect('window-created', () => log('new window created'));
   ```
 
 - [ ] Remove close button from window with following command
@@ -29,3 +37,7 @@ Minimize any app to tray on close
   ```
 
 - [ ] Show appropriate icons for each minimized app in tray
+
+## Notes
+
+- xdotool id to xprop id `0x0${windowId.toString(16)}`
