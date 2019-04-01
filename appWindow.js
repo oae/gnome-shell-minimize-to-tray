@@ -30,9 +30,10 @@ const {
   getPid,
   getWindowByPid,
   getIcon,
+  windowExists,
 } = mtt.imports.windowUtils;
 
-const { logger, setTimeout } = mtt.imports.utils;
+const { logger } = mtt.imports.utils;
 
 const debug = logger('app-window');
 
@@ -88,6 +89,10 @@ var AppWindow = class AppWindow {
   }
 
   toggle() {
+    if (!windowExists(this.pid, this.idInDec)) {
+      return;
+    }
+
     if (this.hidden) {
       this.show();
     } else {
@@ -100,10 +105,13 @@ var AppWindow = class AppWindow {
     this._hidden = true;
   }
 
-  show() {
+  async show() {
     GLib.spawn_command_line_async(`xdotool windowmap ${this.idInDec}`);
     this._hidden = false;
-    setTimeout(() => Main.activateWindow(getWindowByPid(this.pid)), 250);
+    const win = getWindowByPid(this.pid);
+    if (win) {
+      Main.activateWindow(win);
+    }
   }
 
   removeCloseButton() {
@@ -121,7 +129,7 @@ var AppWindow = class AppWindow {
   addTray() {
     this.button = new PanelMenu.Button(1, this.idInDec, true);
 
-    let box = new St.BoxLayout();
+    const box = new St.BoxLayout();
 
     box.add(this.icon);
     this.button.actor.add_child(box);
@@ -132,5 +140,10 @@ var AppWindow = class AppWindow {
 
   removeTray() {
     this.button && this.button.destroy();
+    this.button = null;
+  }
+
+  toString() {
+    return `${this.name}:${this.pid}:${this.title}:${this.idInDec}:${this.idInHex}`;
   }
 };

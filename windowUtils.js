@@ -35,12 +35,21 @@ var getIdInHex = metaWindow => {
 
 var getTitle = metaWindow => metaWindow.get_title();
 
-var getWindowByPid = pid =>
-  Shell.WindowTracker.get_default()
-    .get_app_from_pid(pid)
-    .get_windows()[0];
+var getWindowByPid = pid => {
+  const app = Shell.WindowTracker.get_default().get_app_from_pid(pid);
 
-var getTitleByPid = pid => getWindowByPid(pid).get_title();
+  if(app) {
+    return app.get_windows()[0];
+  }
+};
+
+var getTitleByPid = pid => {
+  const win = getWindowByPid(pid);
+
+  if(win) {
+    return win.get_title();
+  }
+};
 
 var getApp = metaWindow => Shell.WindowTracker.get_default().get_window_app(metaWindow);
 
@@ -52,12 +61,12 @@ var getWmClass = metaWindow => metaWindow.get_wm_class();
 
 var getPid = metaWindow => metaWindow.get_pid();
 
-var windowExists = pid => {
+var windowExists = (pid, idInDec) => {
   const [result, stdout, stderr] = GLib.spawn_command_line_sync(
     `xdotool search --maxdepth=2 --pid ${pid}`,
   );
 
   const windowList = ByteArray.toString(stdout);
 
-  return windowList.length > 0 && windowList.split('\n').length > 0;
+  return windowList.indexOf(idInDec) >= 0;
 };

@@ -17,7 +17,7 @@
 
 const Shell = imports.gi.Shell;
 
-const { logger, debounce, setInterval, clearInterval } = mtt.imports.utils;
+const { logger, debounce } = mtt.imports.utils;
 
 const { getApp, windowExists } = mtt.imports.windowUtils;
 
@@ -33,6 +33,7 @@ var WindowListener = class WindowListener {
   }
 
   enable() {
+    this._onUpdate();
     const onUpdate = debounce(this._onUpdate.bind(this), 250);
 
     this.windowMinimizeHandler = global.window_manager.connect('minimize', (_, win) =>
@@ -44,27 +45,16 @@ var WindowListener = class WindowListener {
       'tracked-windows-changed',
       onUpdate,
     );
-
-    this.trayInterval = setInterval(() => {
-      this.appWindows = this.appWindows.filter(appWin => {
-        if (!windowExists(appWin.pid)) {
-          appWin.removeTray();
-          return false;
-        }
-
-        return true;
-      });
-    }, 200);
   }
 
   disable() {
-    clearInterval(this.trayInterval);
     Shell.WindowTracker.get_default().disconnect(this.windowChangeHandler);
     global.display.disconnect(this.windowCreateHandler);
-    global.window_manager.disconnect(this.windowMinimizeHandler);
     global.window_manager.disconnect(this.windowDestroyHandler);
-    this.appWindows.forEach(appWindow => {
-      appWindow.show();
+    global.window_manager.disconnect(this.windowMinimizeHandler);
+    this.appWindows.forEach(async appWindow => {
+      debug(`appWindow: ${appWindow}`);
+      await appWindow.show();
       appWindow.removeTray();
       appWindow.addCloseButton();
     });
@@ -72,14 +62,11 @@ var WindowListener = class WindowListener {
   }
 
   _onUpdate() {
+    this._cleanupWindows();
     let windows = global.get_window_actors();
     for (let i = 0; i < windows.length; i++) {
       let metaWindow = windows[i].metaWindow;
 
-      if (!metaWindow._mttManaged) {
-        metaWindow.connect('unmanaged', this._onUpdate.bind(this));
-        metaWindow._mttManaged = true;
-      }
       let app = getApp(metaWindow);
 
       if (
@@ -106,5 +93,19 @@ var WindowListener = class WindowListener {
 
     const foundWindow = matchingWindows[0];
     foundWindow.hide();
+  }
+
+  _cleanupWindows() {
+    this.appWindows = this.appWindows.filter(appWin => {
+      debug(`${appWin.name} exists: ${windowExists(appWin.pid, appWin.idInDec)}`);
+      if (!windowExists(appWin.pid, appWin.idInDec)) {
+        debug(`removing window: ${appWin}`);
+        appWin.removeTray();
+
+        return false;
+      }
+
+      return true;
+    });
   }
 };
