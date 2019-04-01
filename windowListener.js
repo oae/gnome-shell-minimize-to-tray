@@ -26,12 +26,13 @@ const debug = logger('window-listener');
 var WindowListener = class WindowListener {
   constructor() {
     debug('initialized');
-    this.apps = ['Spotify', 'Terminal'];
+    this.apps = [];
     this.appWindows = [];
     this.loadState();
   }
 
   enable() {
+    this.apps = mtt.settings.get_strv('supported-apps');
     this._onUpdate();
     const onUpdate = debounce(this._onUpdate.bind(this), 250);
 

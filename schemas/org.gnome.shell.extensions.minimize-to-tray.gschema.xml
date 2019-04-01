@@ -7,7 +7,7 @@
       <description>Current state of the Managed Windows. Format: "appPid:windowId:hidden"</description>
     </key>
     <key type="as" name="supported-apps">
-      <default>[""]</default>
+      <default>["Spotify"]</default>
       <summary>Supported Apps</summary>
       <description>List of supported apps for mtt to manage</description>
     </key>
