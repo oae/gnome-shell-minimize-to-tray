@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist gettext-domain="gnome-shell-extensions">
   <schema path="/org/gnome/shell/extensions/minimize-to-tray/" id="org.gnome.shell.extensions.minimize-to-tray">
-
+    <key type="as" name="current-state">
+      <default>[""]</default>
+      <summary>Current State</summary>
+      <description>Current state of the Managed Windows. Format: "appPid:windowId:hidden"</description>
+    </key>
+    <key type="as" name="supported-apps">
+      <default>[""]</default>
+      <summary>Supported Apps</summary>
+      <description>List of supported apps for mtt to manage</description>
+    </key>
   </schema>
 </schemalist>

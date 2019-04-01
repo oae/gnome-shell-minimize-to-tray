@@ -20,23 +20,24 @@ window.mtt = {
   debug: true,
 };
 
-const { logger } = mtt.imports.utils;
-
+const { getSettings } = mtt.imports.convenience;
 const { WindowListener } = mtt.imports.windowListener;
+const { logger } = mtt.imports.utils;
 
 const debug = logger('mtt');
 
 function init() {
   debug('init');
-  mtt.wl = new WindowListener();
+  mtt.settings = getSettings('org.gnome.shell.extensions.minimize-to-tray');
+  mtt.windowListener = new WindowListener();
 }
 
 function enable() {
   debug('enable');
-  mtt.wl.enable();
+  mtt.windowListener.enable();
 }
 
 function disable() {
   debug('disable');
-  mtt.wl.disable();
+  mtt.windowListener.disable();
 }
