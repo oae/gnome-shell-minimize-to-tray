@@ -37,7 +37,7 @@ Minimize any app to tray on close
   ```
 
 - [x] Show appropriate icons for each minimized app in tray
-- [ ] Save state of the windows incase of shell reload/crash
+- [x] Save state of the windows incase of shell reload/crash
 
 ## Notes
 
