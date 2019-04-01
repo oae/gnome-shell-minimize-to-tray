@@ -53,7 +53,6 @@ var WindowListener = class WindowListener {
     global.window_manager.disconnect(this.windowDestroyHandler);
     global.window_manager.disconnect(this.windowMinimizeHandler);
     this.appWindows.forEach(async appWindow => {
-      debug(`appWindow: ${appWindow}`);
       await appWindow.show();
       appWindow.removeTray();
       appWindow.addCloseButton();
@@ -77,7 +76,7 @@ var WindowListener = class WindowListener {
       ) {
         const appWindow = new AppWindow(metaWindow);
         this.appWindows.push(appWindow);
-        debug(`added new window: ${JSON.stringify(appWindow)}`);
+        debug(`added new window: ${appWindow}`);
         appWindow.removeCloseButton();
         appWindow.addTray();
       }
@@ -97,7 +96,6 @@ var WindowListener = class WindowListener {
 
   _cleanupWindows() {
     this.appWindows = this.appWindows.filter(appWin => {
-      debug(`${appWin.name} exists: ${windowExists(appWin.pid, appWin.idInDec)}`);
       if (!windowExists(appWin.pid, appWin.idInDec)) {
         debug(`removing window: ${appWin}`);
         appWin.removeTray();
