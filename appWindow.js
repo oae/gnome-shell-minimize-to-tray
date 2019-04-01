@@ -18,6 +18,7 @@
 const GLib = imports.gi.GLib;
 const St = imports.gi.St;
 
+
 const Main = imports.ui.main;
 const PanelMenu = imports.ui.panelMenu;
 
@@ -31,6 +32,8 @@ const {
   getWindowByPid,
   getIcon,
   windowExists,
+  showWindow,
+  hideWindow,
 } = mtt.imports.windowUtils;
 
 const { logger } = mtt.imports.utils;
@@ -101,12 +104,12 @@ var AppWindow = class AppWindow {
   }
 
   hide() {
-    GLib.spawn_command_line_async(`xdotool windowunmap ${this.idInDec}`);
+    hideWindow(this.idInDec);
     this._hidden = true;
   }
 
-  async show() {
-    GLib.spawn_command_line_async(`xdotool windowmap ${this.idInDec}`);
+  show() {
+    showWindow(this.idInDec);
     this._hidden = false;
     const win = getWindowByPid(this.pid);
     if (win) {
@@ -127,20 +130,37 @@ var AppWindow = class AppWindow {
   }
 
   addTray() {
-    this.button = new PanelMenu.Button(1, this.idInDec, true);
+    this.button = new PanelMenu.Button(1, `${this.idInDec}:${this.pid}:${this.name}`, true);
 
     const box = new St.BoxLayout();
 
     box.add(this.icon);
     this.button.actor.add_child(box);
-    this.button.actor.connect('button-press-event', this.toggle.bind(this));
+    this.button.actor.connect('button-press-event', () => {
+      this.toggle.call(this);
+      mtt.windowListener.updateState();
+    });
 
-    Main.panel.addToStatusArea(this.idInDec, this.button, 0, 'right');
+    Main.panel.addToStatusArea(`${this.idInDec}:${this.pid}:${this.name}`, this.button, 0, 'right');
   }
 
   removeTray() {
     this.button && this.button.destroy();
     this.button = null;
+  }
+
+  attach(hidden) {
+    this.removeCloseButton();
+    this.addTray();
+    if (hidden) {
+      this.hide();
+    }
+  }
+
+  destroy() {
+    this.show();
+    this.removeTray();
+    this.addCloseButton();
   }
 
   toString() {

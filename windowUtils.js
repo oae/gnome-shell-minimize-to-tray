@@ -38,7 +38,7 @@ var getTitle = metaWindow => metaWindow.get_title();
 var getWindowByPid = pid => {
   const app = Shell.WindowTracker.get_default().get_app_from_pid(pid);
 
-  if(app) {
+  if (app) {
     return app.get_windows()[0];
   }
 };
@@ -46,7 +46,7 @@ var getWindowByPid = pid => {
 var getTitleByPid = pid => {
   const win = getWindowByPid(pid);
 
-  if(win) {
+  if (win) {
     return win.get_title();
   }
 };
@@ -70,3 +70,7 @@ var windowExists = (pid, idInDec) => {
 
   return windowList.indexOf(idInDec) >= 0;
 };
+
+var showWindow = (idInDec, sync) => GLib.spawn_command_line_sync(`xdotool ${sync ? '--sync' : ''} windowmap ${idInDec}`);
+
+var hideWindow = (idInDec, sync) => GLib.spawn_command_line_sync(`xdotool ${sync ? '--sync' : ''} windowunmap ${idInDec}`);

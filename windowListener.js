@@ -18,9 +18,7 @@
 const Shell = imports.gi.Shell;
 
 const { logger, debounce } = mtt.imports.utils;
-
-const { getApp, windowExists } = mtt.imports.windowUtils;
-
+const { getApp, windowExists, showWindow } = mtt.imports.windowUtils;
 const { AppWindow } = mtt.imports.appWindow;
 
 const debug = logger('window-listener');
@@ -30,6 +28,7 @@ var WindowListener = class WindowListener {
     debug('initialized');
     this.apps = ['Spotify', 'Terminal'];
     this.appWindows = [];
+    this.loadState();
   }
 
   enable() {
@@ -52,12 +51,31 @@ var WindowListener = class WindowListener {
     global.display.disconnect(this.windowCreateHandler);
     global.window_manager.disconnect(this.windowDestroyHandler);
     global.window_manager.disconnect(this.windowMinimizeHandler);
-    this.appWindows.forEach(async appWindow => {
-      await appWindow.show();
-      appWindow.removeTray();
-      appWindow.addCloseButton();
-    });
+    this.appWindows.forEach(appWindow => appWindow.destroy());
     this.appWindows = [];
+    this.updateState();
+  }
+
+  loadState() {
+    debug('loading initial state');
+    const initialState = mtt.settings.get_strv('current-state');
+
+    debug(`initial state: ${initialState}`);
+
+    initialState.map(state => state.split(':')).forEach(([ pid, idInDec, hidden ]) => {
+      if(windowExists(pid, idInDec)) {
+        showWindow(idInDec);
+      }
+    });
+  }
+
+  updateState() {
+    debug('updating current state');
+    const currentState = this.appWindows.map(
+      appWin => `${appWin.pid}:${appWin.idInDec}:${appWin.hidden}`,
+    );
+    debug(`new state: ${currentState}`);
+    mtt.settings.set_strv('current-state', currentState);
   }
 
   _onUpdate() {
@@ -77,8 +95,8 @@ var WindowListener = class WindowListener {
         const appWindow = new AppWindow(metaWindow);
         this.appWindows.push(appWindow);
         debug(`added new window: ${appWindow}`);
-        appWindow.removeCloseButton();
-        appWindow.addTray();
+        appWindow.attach();
+        this.updateState();
       }
     }
   }
@@ -92,18 +110,26 @@ var WindowListener = class WindowListener {
 
     const foundWindow = matchingWindows[0];
     foundWindow.hide();
+    this.updateState();
   }
 
   _cleanupWindows() {
+    let shouldUpdateState = false;
     this.appWindows = this.appWindows.filter(appWin => {
       if (!windowExists(appWin.pid, appWin.idInDec)) {
         debug(`removing window: ${appWin}`);
-        appWin.removeTray();
+        shouldUpdateState = true;
+        appWin.destroy();
 
         return false;
       }
 
       return true;
     });
+
+    if(shouldUpdateState) {
+      this.updateState();
+    }
+
   }
 };
