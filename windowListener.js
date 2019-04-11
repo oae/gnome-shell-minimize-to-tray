@@ -18,7 +18,7 @@
 const Shell = imports.gi.Shell;
 
 const { logger, debounce } = mtt.imports.utils;
-const { getApp, windowExists, showWindow } = mtt.imports.windowUtils;
+const { getApp, windowExists, showWindow, hideWindow } = mtt.imports.windowUtils;
 const { AppWindow } = mtt.imports.appWindow;
 
 const debug = logger('window-listener');
@@ -28,11 +28,11 @@ var WindowListener = class WindowListener {
     debug('initialized');
     this.apps = [];
     this.appWindows = [];
-    this.loadState();
   }
 
   enable() {
     this.apps = mtt.settings.get_strv('supported-apps');
+    this.loadState();
     this._onUpdate();
     const onUpdate = debounce(this._onUpdate.bind(this), 250);
 
@@ -54,7 +54,6 @@ var WindowListener = class WindowListener {
     global.window_manager.disconnect(this.windowMinimizeHandler);
     this.appWindows.forEach(appWindow => appWindow.destroy());
     this.appWindows = [];
-    this.updateState();
   }
 
   loadState() {
@@ -63,11 +62,13 @@ var WindowListener = class WindowListener {
 
     debug(`initial state: ${initialState}`);
 
-    initialState.map(state => state.split(':')).forEach(([ pid, idInDec, hidden ]) => {
-      if(windowExists(pid, idInDec)) {
-        showWindow(idInDec);
-      }
-    });
+    initialState
+      .map(state => state.split(':'))
+      .forEach(([pid, idInDec, hidden]) => {
+        if (windowExists(pid, idInDec)) {
+          showWindow(idInDec);
+        }
+      });
   }
 
   updateState() {
@@ -80,6 +81,7 @@ var WindowListener = class WindowListener {
   }
 
   _onUpdate() {
+    const currentState = mtt.settings.get_strv('current-state');
     this._cleanupWindows();
     let windows = global.get_window_actors();
     for (let i = 0; i < windows.length; i++) {
@@ -94,6 +96,15 @@ var WindowListener = class WindowListener {
         this.appWindows.filter(appWin => metaWindow.get_pid() === appWin.pid).length === 0
       ) {
         const appWindow = new AppWindow(metaWindow);
+        const isHidden = currentState
+          .map(state => state.split(':'))
+          .some(
+            ([pid, idInDec, hidden]) =>
+              metaWindow.get_pid().toString() === pid && hidden === 'true',
+          );
+        if (isHidden) {
+          appWindow.hidden = true;
+        }
         this.appWindows.push(appWindow);
         debug(`added new window: ${appWindow}`);
         appWindow.attach();
@@ -128,9 +139,8 @@ var WindowListener = class WindowListener {
       return true;
     });
 
-    if(shouldUpdateState) {
+    if (shouldUpdateState) {
       this.updateState();
     }
-
   }
 };

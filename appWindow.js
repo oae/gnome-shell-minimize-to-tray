@@ -18,7 +18,6 @@
 const GLib = imports.gi.GLib;
 const St = imports.gi.St;
 
-
 const Main = imports.ui.main;
 const PanelMenu = imports.ui.panelMenu;
 
@@ -91,6 +90,10 @@ var AppWindow = class AppWindow {
     return this._hidden;
   }
 
+  set hidden(hidden) {
+    this._hidden = hidden;
+  }
+
   toggle() {
     if (!windowExists(this.pid, this.idInDec)) {
       return;
@@ -105,12 +108,12 @@ var AppWindow = class AppWindow {
 
   hide() {
     hideWindow(this.idInDec);
-    this._hidden = true;
+    this.hidden = true;
   }
 
   show() {
     showWindow(this.idInDec);
-    this._hidden = false;
+    this.hidden = false;
     const win = getWindowByPid(this.pid);
     if (win) {
       Main.activateWindow(win);
@@ -149,11 +152,13 @@ var AppWindow = class AppWindow {
     this.button = null;
   }
 
-  attach(hidden) {
+  attach() {
     this.removeCloseButton();
     this.addTray();
-    if (hidden) {
+    if (this.hidden) {
       this.hide();
+    } else {
+      this.show();
     }
   }
 
@@ -164,6 +169,6 @@ var AppWindow = class AppWindow {
   }
 
   toString() {
-    return `${this.name}:${this.pid}:${this.title}:${this.idInDec}:${this.idInHex}`;
+    return `${this.name}:${this.pid}:${this.title}:${this.idInDec}:${this.idInHex}:${this.hidden}`;
   }
 };

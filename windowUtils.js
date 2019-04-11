@@ -71,6 +71,8 @@ var windowExists = (pid, idInDec) => {
   return windowList.indexOf(idInDec) >= 0;
 };
 
-var showWindow = (idInDec, sync) => GLib.spawn_command_line_sync(`xdotool ${sync ? '--sync' : ''} windowmap ${idInDec}`);
+var showWindow = (idInDec, sync) =>
+  GLib.spawn_command_line_sync(`xdotool windowmap ${sync ? '--sync' : ''} ${idInDec}`);
 
-var hideWindow = (idInDec, sync) => GLib.spawn_command_line_sync(`xdotool ${sync ? '--sync' : ''} windowunmap ${idInDec}`);
+var hideWindow = (idInDec, sync) =>
+  GLib.spawn_command_line_sync(`xdotool windowunmap ${sync ? '--sync' : ''} ${idInDec}`);
