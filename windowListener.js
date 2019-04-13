@@ -98,8 +98,7 @@ var WindowListener = class WindowListener {
       ) {
         const appWindow = new AppWindow(metaWindow);
         const isHidden = currentState.some(
-          ({ pid, idInDec, hidden }) =>
-            metaWindow.get_pid().toString() === pid && hidden === 'true',
+          ({ pid, idInDec, hidden }) => metaWindow.get_pid() === pid && hidden === true,
         );
         if (isHidden) {
           appWindow.hidden = true;
@@ -127,7 +126,10 @@ var WindowListener = class WindowListener {
   _cleanupWindows() {
     let shouldUpdateState = false;
     this.appWindows = this.appWindows.filter(appWin => {
-      if (!windowExists(appWin.pid, appWin.idInDec) || !this.apps.some(app => app.name === appWin.name && app.state === 'enabled')) {
+      if (
+        !windowExists(appWin.pid, appWin.idInDec) ||
+        !this.apps.some(app => app.name === appWin.name && app.state === 'enabled')
+      ) {
         debug(`removing window: ${appWin}`);
         shouldUpdateState = true;
         appWin.destroy();

@@ -99,7 +99,7 @@ var AppWindow = class AppWindow {
       return;
     }
 
-    if (this.hidden) {
+    if (this.hidden === true) {
       this.show();
     } else {
       this.hide();
@@ -155,7 +155,7 @@ var AppWindow = class AppWindow {
   attach() {
     this.removeCloseButton();
     this.addTray();
-    if (this.hidden) {
+    if (this.hidden === true) {
       this.hide();
     } else {
       this.show();
