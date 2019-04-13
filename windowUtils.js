@@ -24,7 +24,16 @@ var getIdInDec = metaWindow => {
     `xdotool search --onlyvisible --maxdepth=2 --pid ${getPid(metaWindow)}`,
   );
 
-  return ByteArray.toString(stdout).split('\n')[0];
+  if (stdout instanceof Uint8Array) {
+    return ByteArray.toString(stdout)
+      .split('\n')[0]
+      .trim();
+  }
+
+  return stdout
+    .toString()
+    .split('\n')[0]
+    .trim();
 };
 
 var getIdInHex = metaWindow => {
@@ -66,7 +75,13 @@ var windowExists = (pid, idInDec) => {
     `xdotool search --maxdepth=2 --pid ${pid}`,
   );
 
-  const windowList = ByteArray.toString(stdout);
+  let windowList = ByteArray.toString(stdout);
+
+  if (stdout instanceof Uint8Array) {
+    windowList = ByteArray.toString(stdout);
+  } else {
+    windowList = stdout.toString();
+  }
 
   return windowList.indexOf(idInDec) >= 0;
 };
