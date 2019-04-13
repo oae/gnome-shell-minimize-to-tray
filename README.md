@@ -1,44 +1,43 @@
 # Minimize to Tray
 
-Minimize any app to tray on close
+Minimize any app to tray
 
 ![SS](https://i.imgur.com/5J7mstv.jpg)
 
-## TODO
+## Requirements
 
-- [ ] Create a preference page for users to enable/disable supported apps
-- [x] Listen all window related events to map user's apps
+Make sure you have `xdotool` and `xprop` tools are installed in your system.
 
-  ```js
-  handler = global.window_manager.connect('minimize', (_, win) => {
-    if(matchWindow(win, 'spotify.*##Spotify##Spotify')) {
-      // TODO: hide window, put tray icon
-    }
-  });
-  handler = global.window_manager.connect('destroy', (_, win) => {
-    if(matchWindow(win, 'spotify.*##Spotify##Spotify')) {
-      // TODO: on destroy
-    }
-  });
-  global.display.connect('window-created', () => log('new window created'));
-  ```
+## Installation
 
-- [x] Remove close button from window with following command
+### From [Git](https://github.com/oae/gnome-shell-minimize-to-tray)
 
-  ```sh
-  xprop -id (wmctrl -l | grep Spotify | cut -d' '  -f1) -f _MOTIF_WM_HINTS 32c -set _MOTIF_WM_HINTS "1,30"
-  ```
+```bash
+curl https://raw.githubusercontent.com/oae/gnome-shell-minimize-to-tray/master/installer.sh | bash
+```
 
-- [x] Hide window with
+### From [Ego](extensions.gnome.org)
+
+* You can install it from [here](about:blank)
+
+## Usage
+
+// TODO
+
+## Debugging
+
+* If you encounter a problem you can enable the debug logs with;
 
   ```sh
-  windowId=`xdotool search --onlyvisible --name '^Spotify$'`
-  xdotool windowunmap ${windowId}
+  busctl --user call org.gnome.Shell /org/gnome/Shell org.gnome.Shell Eval s 'window.mtt.debug = true;'
   ```
 
-- [x] Show appropriate icons for each minimized app in tray
-- [x] Save state of the windows incase of shell reload/crash
+* Then trace them with;
+
+  ```sh
+  journalctl /usr/bin/gnome-shell -f -o cat | grep "\[minimize-to-tray\]"
+  ```
 
 ## Notes
 
-- xdotool id to xprop id `0x0${windowId.toString(16)}`
+* Currently only **Non-CSD** (Client Side Decoration) windows and applications that can be tracked by Gnome Shell is supported

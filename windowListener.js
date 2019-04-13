@@ -31,7 +31,7 @@ var WindowListener = class WindowListener {
   }
 
   enable() {
-    this.apps = mtt.settings.get_strv('supported-apps');
+    this.apps = JSON.parse(mtt.settings.get_string('apps'));
     this.loadState();
     this._onUpdate();
     const onUpdate = debounce(this._onUpdate.bind(this), 250);
@@ -58,30 +58,30 @@ var WindowListener = class WindowListener {
 
   loadState() {
     debug('loading initial state');
-    const initialState = mtt.settings.get_strv('current-state');
+    const initialState = JSON.parse(mtt.settings.get_string('current-state'));
 
     debug(`initial state: ${initialState}`);
 
-    initialState
-      .map(state => state.split(':'))
-      .forEach(([pid, idInDec, hidden]) => {
-        if (windowExists(pid, idInDec)) {
-          showWindow(idInDec);
-        }
-      });
+    initialState.forEach(({ pid, idInDec, hidden }) => {
+      if (windowExists(pid, idInDec)) {
+        showWindow(idInDec);
+      }
+    });
   }
 
   updateState() {
     debug('updating current state');
-    const currentState = this.appWindows.map(
-      appWin => `${appWin.pid}:${appWin.idInDec}:${appWin.hidden}`,
-    );
+    const currentState = this.appWindows.map(appWin => ({
+      pid: appWin.pid,
+      idInDec: appWin.idInDec,
+      hidden: appWin.hidden,
+    }));
     debug(`new state: ${currentState}`);
-    mtt.settings.set_strv('current-state', currentState);
+    mtt.settings.set_string('current-state', JSON.stringify(currentState));
   }
 
   _onUpdate() {
-    const currentState = mtt.settings.get_strv('current-state');
+    const currentState = JSON.parse(mtt.settings.get_string('current-state'));
     this._cleanupWindows();
     let windows = global.get_window_actors();
     for (let i = 0; i < windows.length; i++) {
@@ -92,16 +92,14 @@ var WindowListener = class WindowListener {
       if (
         app != null &&
         !app.is_window_backed() &&
-        this.apps.indexOf(app.get_name()) >= 0 &&
+        this.apps.some(curr => curr.name === app.get_name() && curr.state === 'enabled') &&
         this.appWindows.filter(appWin => metaWindow.get_pid() === appWin.pid).length === 0
       ) {
         const appWindow = new AppWindow(metaWindow);
-        const isHidden = currentState
-          .map(state => state.split(':'))
-          .some(
-            ([pid, idInDec, hidden]) =>
-              metaWindow.get_pid().toString() === pid && hidden === 'true',
-          );
+        const isHidden = currentState.some(
+          ({ pid, idInDec, hidden }) =>
+            metaWindow.get_pid().toString() === pid && hidden === 'true',
+        );
         if (isHidden) {
           appWindow.hidden = true;
         }

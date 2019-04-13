@@ -2,7 +2,7 @@
 
 UUID = minimize-to-tray@elhan.io
 BASE_MODULES = extension.js metadata.json LICENSE README.md
-EXTRA_MODULES = utils.js convenience.js windowListener.js windowUtils.js appWindow.js
+EXTRA_MODULES = utils.js convenience.js windowListener.js windowUtils.js appWindow.js prefs.js stylesheet.css ui
 TOLOCALIZE =
 INSTALLBASE = ~/.local/share/gnome-shell/extensions
 INSTALLNAME = minimize-to-tray@elhan.io
