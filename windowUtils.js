@@ -75,7 +75,7 @@ var windowExists = (pid, idInDec) => {
     `xdotool search --maxdepth=2 --pid ${pid}`,
   );
 
-  let windowList = ByteArray.toString(stdout);
+  let windowList;
 
   if (stdout instanceof Uint8Array) {
     windowList = ByteArray.toString(stdout);
