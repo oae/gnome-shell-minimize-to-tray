@@ -2,7 +2,7 @@
 
 Minimize any app to tray
 
-![SS](https://i.imgur.com/5J7mstv.jpg)
+![SS](https://i.imgur.com/cgJsgNT.png)
 
 ## Requirements
 
@@ -22,7 +22,15 @@ curl https://raw.githubusercontent.com/oae/gnome-shell-minimize-to-tray/master/i
 
 ## Usage
 
-// TODO
+* From extension settings add applications like below;
+  
+  ![SS](https://i.imgur.com/cbsHdMe.png)
+
+* You can get the list of currently running application names with following bash command;
+
+    ```sh
+    d=`date "+%Y-%m-%d %H:%M:%S"` && busctl --user call org.gnome.Shell /org/gnome/Shell org.gnome.Shell Eval s 'global.get_window_actors().forEach(w => {const app = Shell.WindowTracker.get_default().get_window_app(w.metaWindow); if(app) log(`app-names:${app.get_name()}`)});' > /dev/null  2>&1 && journalctl /usr/bin/gnome-shell --since "`echo $d`" -o cat | grep 'app-names' | cut -f 2 -d ':'
+    ```
 
 ## Debugging
 
@@ -40,4 +48,4 @@ curl https://raw.githubusercontent.com/oae/gnome-shell-minimize-to-tray/master/i
 
 ## Notes
 
-* Currently only **Non-CSD** (Client Side Decoration) windows and applications that can be tracked by Gnome Shell is supported
+* Currently only **Non-CSD** (Non Client Side Decorated) windows and applications that are tracked by Gnome Shell is supported
