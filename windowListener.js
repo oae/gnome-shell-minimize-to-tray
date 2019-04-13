@@ -32,6 +32,7 @@ var WindowListener = class WindowListener {
 
   enable() {
     this.apps = JSON.parse(mtt.settings.get_string('apps'));
+    mtt.settings.connect('changed::apps', this._settingsChanged.bind(this));
     this.loadState();
     this._onUpdate();
     const onUpdate = debounce(this._onUpdate.bind(this), 250);
@@ -60,7 +61,7 @@ var WindowListener = class WindowListener {
     debug('loading initial state');
     const initialState = JSON.parse(mtt.settings.get_string('current-state'));
 
-    debug(`initial state: ${initialState}`);
+    debug(`initial state: ${JSON.stringify(initialState)}`);
 
     initialState.forEach(({ pid, idInDec, hidden }) => {
       if (windowExists(pid, idInDec)) {
@@ -76,7 +77,7 @@ var WindowListener = class WindowListener {
       idInDec: appWin.idInDec,
       hidden: appWin.hidden,
     }));
-    debug(`new state: ${currentState}`);
+    debug(`new state: ${JSON.stringify(currentState)}`);
     mtt.settings.set_string('current-state', JSON.stringify(currentState));
   }
 
@@ -126,7 +127,7 @@ var WindowListener = class WindowListener {
   _cleanupWindows() {
     let shouldUpdateState = false;
     this.appWindows = this.appWindows.filter(appWin => {
-      if (!windowExists(appWin.pid, appWin.idInDec)) {
+      if (!windowExists(appWin.pid, appWin.idInDec) || !this.apps.some(app => app.name === appWin.name && app.state === 'enabled')) {
         debug(`removing window: ${appWin}`);
         shouldUpdateState = true;
         appWin.destroy();
@@ -140,5 +141,14 @@ var WindowListener = class WindowListener {
     if (shouldUpdateState) {
       this.updateState();
     }
+  }
+
+  _settingsChanged(key) {
+    debug(`settings changed.`);
+
+    this.apps = JSON.parse(mtt.settings.get_string('apps'));
+    debug(`apps: ${JSON.stringify(this.apps)}`);
+
+    this._onUpdate();
   }
 };
