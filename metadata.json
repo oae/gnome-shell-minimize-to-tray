@@ -2,7 +2,7 @@
   "extension-id": "minimize-to-tray",
   "uuid": "minimize-to-tray@elhan.io",
   "name": "Minimize to Tray",
-  "description": "Minimize any app to tray on close",
+  "description": "Minimize any app to tray",
   "shell-version": [
     "3.18",
     "3.20",
