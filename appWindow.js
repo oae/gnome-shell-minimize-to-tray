@@ -120,18 +120,6 @@ var AppWindow = class AppWindow {
     }
   }
 
-  removeCloseButton() {
-    GLib.spawn_command_line_async(
-      `xprop -id ${this.idInHex} -f _MOTIF_WM_HINTS 32c -set _MOTIF_WM_HINTS "1,30"`,
-    );
-  }
-
-  addCloseButton() {
-    GLib.spawn_command_line_async(
-      `xprop -id ${this.idInHex} -f _MOTIF_WM_HINTS 32c -set _MOTIF_WM_HINTS true`,
-    );
-  }
-
   addTray() {
     this.button = new PanelMenu.Button(1, `${this.idInDec}:${this.pid}:${this.name}`, true);
 
@@ -153,7 +141,6 @@ var AppWindow = class AppWindow {
   }
 
   attach() {
-    this.removeCloseButton();
     this.addTray();
     if (this.hidden === true) {
       this.hide();
@@ -165,7 +152,6 @@ var AppWindow = class AppWindow {
   destroy() {
     this.show();
     this.removeTray();
-    this.addCloseButton();
   }
 
   toString() {
