@@ -6,7 +6,7 @@ Minimize any app to tray
 
 ## Requirements
 
-Make sure you have `xdotool` and `xprop` tools are installed in your system.
+Make sure you have `xdotool` tool installed in your system.
 
 ## Installation
 
@@ -18,7 +18,7 @@ curl https://raw.githubusercontent.com/oae/gnome-shell-minimize-to-tray/master/i
 
 ### From [Ego](extensions.gnome.org)
 
-* You can install it from [here](about:blank)
+* You can install it from [here](https://extensions.gnome.org/extension/1750/minimize-to-tray/)
 
 ## Usage
 
@@ -26,11 +26,9 @@ curl https://raw.githubusercontent.com/oae/gnome-shell-minimize-to-tray/master/i
   
   ![SS](https://i.imgur.com/cbsHdMe.png)
 
-* You can get the list of currently running application names with following bash command;
+* Currently running supported applications will be autocompleted as you type;
 
-    ```sh
-    d=`date "+%Y-%m-%d %H:%M:%S"` && busctl --user call org.gnome.Shell /org/gnome/Shell org.gnome.Shell Eval s 'global.get_window_actors().forEach(w => {const app = Shell.WindowTracker.get_default().get_window_app(w.metaWindow); if(app) log(`app-names:${app.get_name()}`)});' > /dev/null  2>&1 && journalctl /usr/bin/gnome-shell --since "`echo $d`" -o cat | grep 'app-names' | cut -f 2 -d ':'
-    ```
+  ![SS](https://i.imgur.com/ewLfLfZ.png)
 
 ## Debugging
 
@@ -48,4 +46,4 @@ curl https://raw.githubusercontent.com/oae/gnome-shell-minimize-to-tray/master/i
 
 ## Notes
 
-* Currently only **Non-CSD** (Non Client Side Decorated) windows and applications that are tracked by Gnome Shell is supported
+* Currently only applications that can be tracked by Gnome Shell is supported
