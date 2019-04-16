@@ -120,6 +120,19 @@ const Preferences = class Preferences {
     this.initValues();
   }
 
+  onFocus() {
+    const appNames = JSON.parse(this.settings.get_string('running-apps'));
+
+    const model = new Gtk.ListStore();
+    model.set_column_types([GObject.TYPE_STRING]);
+
+    appNames.forEach(app => model.set(model.append(), [0], [app]));
+
+    const completion = new Gtk.EntryCompletion({ model, minimum_key_length: 0 });
+    completion.set_text_column(0);
+    this.newApp.set_completion(completion);
+  }
+
   addApp(appName, state) {
     const appState = state === undefined ? 'enabled' : state;
     const appListItem = new AppListItem(

@@ -11,5 +11,10 @@
       <summary>Apps</summary>
       <description>Apps for mtt to manage</description>
     </key>
+    <key type="s" name="running-apps">
+      <default>"[]"</default>
+      <summary>Running Apps</summary>
+      <description>Running apps for mtt to manage</description>
+    </key>
   </schema>
 </schemalist>

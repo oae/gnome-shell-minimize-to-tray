@@ -91,7 +91,7 @@ var WindowListener = class WindowListener {
       let app = getApp(metaWindow);
 
       if (
-        app != null &&
+        app !== null &&
         !app.is_window_backed() &&
         this.apps.some(curr => curr.name === app.get_name() && curr.state === 'enabled') &&
         this.appWindows.filter(appWin => metaWindow.get_pid() === appWin.pid).length === 0
@@ -109,6 +109,21 @@ var WindowListener = class WindowListener {
         this.updateState();
       }
     }
+
+    this._updateRunningApps();
+  }
+
+  _updateRunningApps() {
+    const appNames = global
+      .get_window_actors()
+      .map(w => {
+        const app = Shell.WindowTracker.get_default().get_window_app(w.metaWindow);
+        if (app && app.get_name() && w.metaWindow.get_pid() !== -1) {
+          return app.get_name();
+        }
+      })
+      .filter(app => !!app);
+    mtt.settings.set_string('running-apps', JSON.stringify([...new Set(appNames)]));
   }
 
   _onWindowMinimize(metaWindow) {

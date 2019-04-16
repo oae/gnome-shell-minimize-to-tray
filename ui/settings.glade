@@ -43,6 +43,7 @@
                 <property name="valign">baseline</property>
                 <signal name="activate" handler="onAdd" swapped="no"/>
                 <signal name="activate" handler="onPopdown" swapped="no"/>
+                <signal name="focus" handler="onFocus" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">True</property>
