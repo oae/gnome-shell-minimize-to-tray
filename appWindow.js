@@ -126,8 +126,8 @@ var AppWindow = class AppWindow {
     const box = new St.BoxLayout();
 
     box.add(this.icon);
-    this.button.actor.add_child(box);
-    this.button.actor.connect('button-press-event', () => {
+    this.button.add_child(box);
+    this.button.connect('button-press-event', () => {
       this.toggle.call(this);
       mtt.windowListener.updateState();
     });
