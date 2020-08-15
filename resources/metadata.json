@@ -1,0 +1,9 @@
+{
+  "name": "Minimize to Tray",
+  "description": "Minimize any app to tray",
+  "uuid": "minimize-to-tray@elhan.io",
+  "version": 4,
+  "settings-schema": "org.gnome.shell.extensions.minimize-to-tray",
+  "url": "https://github.com/oae/gnome-shell-minimize-to-tray",
+  "shell-version": ["3.36"]
+}
