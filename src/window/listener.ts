@@ -147,7 +147,7 @@ export class WindowListener {
     try {
       const oldState: Array<MttWindow> = JSON.parse(this.settings.get_string('extension-state'));
 
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 200));
       for (let i = 0; i < oldState.length; i++) {
         const oldWindowState = oldState[i];
         const window = await this.getWindow(oldWindowState.xid);
