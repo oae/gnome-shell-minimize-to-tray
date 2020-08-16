@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="gnome-shell-extensions">
+  <schema path="/org/gnome/shell/extensions/minimize-to-tray/" id="org.gnome.shell.extensions.minimize-to-tray">
+    <key type="s" name="mtt-data">
+      <default>"[]"</default>
+      <summary>Minimize to tray data</summary>
+      <description>Minimize to tray data</description>
+    </key>
+    <key type="s" name="extension-state">
+      <default>"[]"</default>
+      <summary>Minimize to tray extension state</summary>
+      <description>Minimize to tray extension state</description>
+    </key>
+  </schema>
+</schemalist>
