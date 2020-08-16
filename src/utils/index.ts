@@ -1,7 +1,30 @@
 import { Subprocess, SubprocessFlags, AsyncResult } from '@imports/Gio-2.0';
 import { Window } from '@imports/Meta-6';
+import { timeout_add, PRIORITY_DEFAULT, Source } from '@imports/GLib-2.0';
 
 export const logger = (prefix: string) => (content: string): void => log(`[mtt] [${prefix}] ${content}`);
+
+export const setInterval = (func: () => any, millis: number): number => {
+  const id = timeout_add(PRIORITY_DEFAULT, millis, () => {
+    func();
+
+    return true;
+  });
+
+  return id;
+};
+
+export const clearInterval = (id: number): boolean => Source.remove(id);
+
+export const setTimeout = (func: () => any, millis: number): number => {
+  return timeout_add(PRIORITY_DEFAULT, millis, () => {
+    func();
+
+    return false;
+  });
+};
+
+export const clearTimeout = (id: number): boolean => Source.remove(id);
 
 export const execute = async (command: string): Promise<string> => {
   const process = new Subprocess({
@@ -39,7 +62,7 @@ export const getWindowXid = async (): Promise<string> => {
  *
  * Guesses the X ID of a window.
  */
-export const guessWindowXID = async (window: Window): Promise<string | null> => {
+export const guessWindowXID = async (window: Window): Promise<string | undefined> => {
   // We cache the result so we don't need to redetect.
   // if (window._mttWindowId) {
   //   return window._mttWindowId;
@@ -115,6 +138,4 @@ export const guessWindowXID = async (window: Window): Promise<string | null> => 
       }
     }
   }
-
-  return null;
 };

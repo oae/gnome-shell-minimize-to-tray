@@ -9,10 +9,9 @@ export type MttInfo = {
 };
 
 export type MttWindow = {
-  id: string;
+  xid: string;
   hidden: boolean;
   className: string;
-  tray: any;
 };
 
 export {};
