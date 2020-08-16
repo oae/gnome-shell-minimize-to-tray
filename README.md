@@ -13,7 +13,7 @@ Minimize any app to tray
 
 ## Requirements
 
-Make sure you have `xdotool`, `xwininfo`, `xprop`, `libwnck3` installed in your system.
+Make sure you have `xdotool`, `xwininfo`, `xprop`, `libwnck3` installed on your system.
 
 ## Installation
 
@@ -34,7 +34,7 @@ ln -s "$PWD/dist" "$HOME/.local/share/gnome-shell/extensions/minimize-to-tray@el
 
 ## Usage
 
-- From the extension settings, you can click add button and select any open window to put them in to tray
+- From the extension settings, you can click add button and select any opened window to put them in to tray
   ![SS](https://i.imgur.com/dZl4J9x.png)
 
 ## Development
