@@ -14,12 +14,12 @@ export class MttExtension {
   }
 
   enable(): void {
-    this.listener.startListening();
+    this.listener.enable();
     debug('extension is enabled');
   }
 
   disable(): void {
-    this.listener.stopListening();
+    this.listener.disable();
     debug('extension is disabled');
   }
 }
