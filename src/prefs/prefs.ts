@@ -18,6 +18,7 @@ import { base64_encode, base64_decode } from '@imports/GLib-2.0';
 import { logger, getWindowXid, getWindowClassName } from '../utils';
 import { ShellExtension, getCurrentExtension, getCurrentExtensionSettings } from '../shell';
 import { MttInfo } from '../index';
+import { Screen, Window } from '@imports/Wnck-3.0';
 
 const debug = logger('prefs');
 
@@ -158,16 +159,21 @@ class Preferences {
   }
 
   private getIconFromWindow(xid: string): Pixbuf | undefined {
-    // TODO(alperen): get real icon
-    debug(`getting icon for window ${xid}`);
-    // Get the icon from window
-    const defaulIcon = IconTheme.get_default().lookup_icon(
-      'applications-system-symbolic',
-      32,
-      IconLookupFlags.USE_BUILTIN,
-    );
+    Screen.get_default()?.force_update();
+    const window = Window.get(parseInt(xid));
+    if (!window || window.get_icon_is_fallback()) {
+      debug(`getting icon for window ${xid}`);
+      // Get the icon from window
+      const defaulIcon = IconTheme.get_default().lookup_icon(
+        'applications-system-symbolic',
+        32,
+        IconLookupFlags.USE_BUILTIN,
+      );
 
-    return defaulIcon?.load_icon();
+      return defaulIcon?.load_icon();
+    }
+
+    return window.get_icon();
   }
 }
 
