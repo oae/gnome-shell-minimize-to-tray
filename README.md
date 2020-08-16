@@ -1,46 +1,41 @@
 # Extensions Sync
 
 [![ts](https://badgen.net/badge/icon/typescript?icon=typescript&label)](#)
-[![deps](https://img.shields.io/david/oae/gnome-shell-extensions-sync)](#)
+[![deps](https://img.shields.io/david/oae/gnome-shell-minimize-to-tray)](#)
 [![opensource](https://badges.frapsoft.com/os/v1/open-source.png?v=103)](#)
-[![licence](https://badges.frapsoft.com/os/gpl/gpl.png?v=103)](https://github.com/oae/gnome-shell-extensions-sync/blob/master/LICENSE)
-[![latest](https://img.shields.io/github/v/release/oae/gnome-shell-extensions-sync)](https://github.com/oae/gnome-shell-extensions-sync/releases/latest)
-[![compare](https://img.shields.io/github/commits-since/oae/gnome-shell-extensions-sync/latest/master)](https://github.com/oae/gnome-shell-extensions-sync/compare)
+[![licence](https://badges.frapsoft.com/os/gpl/gpl.png?v=103)](https://github.com/oae/gnome-shell-minimize-to-tray/blob/master/LICENSE)
+[![latest](https://img.shields.io/github/v/release/oae/gnome-shell-minimize-to-tray)](https://github.com/oae/gnome-shell-minimize-to-tray/releases/latest)
+[![compare](https://img.shields.io/github/commits-since/oae/gnome-shell-minimize-to-tray/latest/master)](https://github.com/oae/gnome-shell-minimize-to-tray/compare)
 
-Syncs gnome shell extensions and their configurations across all gnome installations
+Minimize any app to tray
 
-![SS](https://i.imgur.com/XfXOQCB.png)
+![SS](https://i.imgur.com/Z9TnedC.png)
+
+## Requirements
+
+Make sure you have `xdotool`, `xwininfo`, `xprop`, `libwnck3` installed in your system.
 
 ## Installation
 
-### From [Git](https://github.com/oae/gnome-shell-extensions-sync)
+### From [Git](https://github.com/oae/gnome-shell-minimize-to-tray)
 
 ```bash
-git clone https://github.com/oae/gnome-shell-extensions-sync.git
-cd ./gnome-shell-extensions-sync
+git clone https://github.com/oae/gnome-shell-minimize-to-tray.git
+cd ./gnome-shell-minimize-to-tray
 yarn install
 yarn build
-ln -s "$PWD/dist" "$HOME/.local/share/gnome-shell/extensions/extensions-sync@elhan.io"
+ln -s "$PWD/dist" "$HOME/.local/share/gnome-shell/extensions/minimize-to-tray@elhan.io"
 ```
 
 ### From [Ego](extensions.gnome.org)
 
 - You can install it from link below
-  https://extensions.gnome.org/extension/1486/extensions-sync/
+  https://extensions.gnome.org/extension/1750/minimize-to-tray/
 
 ## Usage
 
-## For Github
-
-1. Create a new gist from [here](https://gist.github.com/) I suggest you make it secret.
-2. Create a new token from [here](https://github.com/settings/tokens/new). Only gist permission is needed since we edit the gists.
-3. Open extension settings, select the `Github` provider and fill gist id from first step and user token from second step.
-
-## For Gitlab
-
-1. Create a new snippet from [here](https://gitlab.com/snippets/new) I suggest you make it private.
-2. Create a new token from [here](https://gitlab.com/profile/personal_access_tokens). Only api scope is needed.
-3. Open extension settings, select the `Gitlab` provider and fill snippet id from first step and user token from second step.
+- From the extension settings, you can click add button and select any open window to put them in to tray
+  ![SS](https://i.imgur.com/dZl4J9x.png)
 
 ## Development
 
@@ -51,8 +46,8 @@ ln -s "$PWD/dist" "$HOME/.local/share/gnome-shell/extensions/extensions-sync@elh
   - Clone the project
 
     ```sh
-    git clone https://github.com/oae/gnome-shell-extensions-sync.git
-    cd ./gnome-shell-extensions-sync
+    git clone https://github.com/oae/gnome-shell-minimize-to-tray.git
+    cd ./gnome-shell-minimize-to-tray
     ```
 
   - Install dependencies and build it
