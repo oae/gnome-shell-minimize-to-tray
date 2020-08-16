@@ -1,4 +1,4 @@
-import { logger, guessWindowXID } from '../utils';
+import { logger, guessWindowXID, setTimeout } from '../utils';
 import { Settings } from '@imports/Gio-2.0';
 import { Icon as StIcon, Bin } from '@imports/St-1.0';
 import { getCurrentExtensionSettings } from '../shell';
@@ -40,15 +40,19 @@ export class WindowListener {
     // Check for currently opened windows, if they match our data, we track the window
     const existingWindows = Global.get().get_window_actors();
     for (let i = 0; i < existingWindows.length; i++) {
-      const xid = await guessWindowXID(existingWindows[i].get_meta_window());
+      const window = existingWindows[i].get_meta_window();
+      if (!window.get_wm_class_instance() || window.get_window_type() != WindowType.NORMAL) {
+        continue;
+      }
+      const xid = await guessWindowXID(window);
       if (xid) {
-        await this.trackWindow(xid, existingWindows[i].get_meta_window());
+        await this.trackWindow(xid, window);
       }
     }
 
     // Watch for window-opened events
     this.windowOpenedListenerId = Global.get().display.connect('window-created', async (_, window) => {
-      if (window.get_window_type() !== WindowType.DESKTOP || !window.get_wm_class_instance()) {
+      if (window.get_window_type() !== WindowType.NORMAL || !window.get_wm_class_instance()) {
         return;
       }
       const xid = await guessWindowXID(window);
@@ -61,7 +65,7 @@ export class WindowListener {
     // Watch for window-closed events
     this.windowClosedListenerId = Global.get().window_manager.connect('destroy', async (_, windowActor) => {
       if (
-        windowActor.get_meta_window().get_window_type() !== WindowType.DESKTOP ||
+        windowActor.get_meta_window().get_window_type() !== WindowType.NORMAL ||
         !windowActor.get_meta_window().get_wm_class_instance()
       ) {
         return;
@@ -77,9 +81,13 @@ export class WindowListener {
     this.windowChangedListenerId = WindowTracker.get_default().connect('tracked-windows-changed', async () => {
       const existingWindows = Global.get().get_window_actors();
       for (let i = 0; i < existingWindows.length; i++) {
-        const xid = await guessWindowXID(existingWindows[i].get_meta_window());
+        const window = existingWindows[i].get_meta_window();
+        if (!window.get_wm_class_instance() || window.get_window_type() != WindowType.NORMAL) {
+          continue;
+        }
+        const xid = await guessWindowXID(window);
         if (xid) {
-          await this.trackWindow(xid, existingWindows[i].get_meta_window());
+          await this.trackWindow(xid, window);
         }
       }
     });
@@ -87,7 +95,7 @@ export class WindowListener {
     // Watch for window-closed events
     this.windowClosedListenerId = Global.get().window_manager.connect('minimize', async (_, windowActor) => {
       if (
-        windowActor.get_meta_window().get_window_type() !== WindowType.DESKTOP ||
+        windowActor.get_meta_window().get_window_type() !== WindowType.NORMAL ||
         !windowActor.get_meta_window().get_wm_class_instance()
       ) {
         return;
@@ -139,10 +147,11 @@ export class WindowListener {
     try {
       const oldState: Array<MttWindow> = JSON.parse(this.settings.get_string('extension-state'));
 
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       for (let i = 0; i < oldState.length; i++) {
         const oldWindowState = oldState[i];
         const window = await this.getWindow(oldWindowState.xid);
-        if (!window || !window.get_wm_class_instance()) {
+        if (!window || !window.get_wm_class_instance() || window.get_window_type() != WindowType.NORMAL) {
           continue;
         }
 
@@ -175,6 +184,7 @@ export class WindowListener {
     // Get the class name
     const className = metaWindow.get_wm_class_instance();
     if (className == null) {
+      debug(`className is null for xid: ${xid}`);
       return;
     }
 
@@ -184,9 +194,10 @@ export class WindowListener {
     // Check if we have the class name in our mtt data
     if (mttInfo && mttInfo.enabled && this.trackedWindows.findIndex((trackedWindow) => trackedWindow.xid == xid) < 0) {
       // Find the app from pid
-      const app = WindowTracker.get_default().get_app_from_pid(metaWindow.get_pid());
+      const app = WindowTracker.get_default().get_window_app(metaWindow);
 
       if (app == null) {
+        debug(`app is null for xid/className: ${xid}/${className}`);
         return;
       }
 
@@ -239,6 +250,10 @@ export class WindowListener {
 
     const existingWindows = Global.get().get_window_actors();
     for (let i = 0; i < existingWindows.length; i++) {
+      const window = existingWindows[i].get_meta_window();
+      if (window.get_window_type() !== WindowType.NORMAL || !window.get_wm_class_instance()) {
+        continue;
+      }
       const xid = await guessWindowXID(existingWindows[i].get_meta_window());
       if (xid) {
         await this.trackWindow(xid, existingWindows[i].get_meta_window());
