@@ -1,4 +1,4 @@
-# Extensions Sync
+# Minimize to Tray
 
 [![ts](https://badgen.net/badge/icon/typescript?icon=typescript&label)](#)
 [![deps](https://img.shields.io/david/oae/gnome-shell-minimize-to-tray)](#)
