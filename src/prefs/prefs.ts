@@ -154,9 +154,13 @@ class Preferences {
 
     // Add keybindings if exists
     const keybindingsContainer = rowBuilder.get_object('keybinding-container') as Box;
+    const keybindingButton = rowBuilder.get_object('keybinding-button') as Button;
+    const keybindingButtonImage = keybindingButton.get_child() as Image;
     if (info.keybinding && info.keybinding.length > 0) {
       info.keybinding.forEach((key) => {
         const label = new Label();
+        keybindingButton.set_tooltip_text('Remove keyboard shortcut');
+        keybindingButtonImage.set_from_icon_name('edit-undo-symbolic', IconSize.BUTTON);
         label.get_style_context().add_class('keycap');
         label.get_style_context().add_class('mtt-keybinding');
         label.set_text(key);
@@ -164,17 +168,16 @@ class Preferences {
         keybindingsContainer.add_child(rowBuilder, label, null);
       });
     }
-    const keybindingButton = rowBuilder.get_object('keybinding-button') as Button;
     keybindingButton.connect('clicked', () => {
-      const image = keybindingButton.get_child() as Image;
       if (info.keybinding && info.keybinding.length > 0) {
         debug('removing keybinding');
         info.keybinding = [];
         keybindingsContainer.get_children().forEach((child) => child.destroy());
-        image.set_from_icon_name('input-keyboard-symbolic', IconSize.BUTTON);
+        keybindingButtonImage.set_from_icon_name('input-keyboard-symbolic', IconSize.BUTTON);
         keybindingButton.set_tooltip_text('Add keyboard shortcut');
       } else {
         debug('adding keybinding');
+        // TODO(alperen): get shortcuts from user and check if they are available
         info.keybinding = ['Ctrl', 'Alt', 'S'];
         keybindingButton.set_tooltip_text('Remove keyboard shortcut');
         info.keybinding.forEach((key) => {
@@ -182,7 +185,7 @@ class Preferences {
           label.get_style_context().add_class('keycap');
           label.get_style_context().add_class('mtt-keybinding');
           label.set_text(key);
-          image.set_from_icon_name('edit-undo-symbolic', IconSize.BUTTON);
+          keybindingButtonImage.set_from_icon_name('edit-undo-symbolic', IconSize.BUTTON);
           keybindingsContainer.add_child(rowBuilder, label, null);
           label.show_all();
         });
