@@ -1,29 +1,32 @@
+import { Colorspace, Pixbuf } from '@imports/GdkPixbuf-2.0';
 import { Settings } from '@imports/Gio-2.0';
+import { base64_decode, base64_encode } from '@imports/GLib-2.0';
 import {
   Box,
   Builder,
-  ListBoxRow,
-  ListBox,
-  Label,
   Button,
-  Image,
-  IconTheme,
+  CssProvider,
   IconLookupFlags,
+  IconTheme,
+  Image,
+  Label,
+  ListBox,
+  ListBoxRow,
+  STYLE_PROVIDER_PRIORITY_USER,
   Switch,
+  StyleContext,
+  ToggleButton,
+  IconSize,
 } from '@imports/Gtk-3.0';
-
-import { Pixbuf, Colorspace } from '@imports/GdkPixbuf-2.0';
-import { base64_encode, base64_decode } from '@imports/GLib-2.0';
-
-import { logger, getWindowXid, getWindowClassName } from '../utils';
-import { ShellExtension, getCurrentExtension, getCurrentExtensionSettings } from '../shell';
-import { MttInfo } from '../index';
 import { Screen, Window } from '@imports/Wnck-3.0';
+import { MttInfo } from '../index';
+import { getCurrentExtension, getCurrentExtensionSettings, ShellExtension } from '../shell';
+import { getWindowClassName, getWindowXid, logger } from '../utils';
 
 const debug = logger('prefs');
 
 class Preferences {
-  private extension: ShellExtension;
+  extension: ShellExtension;
   private settings: Settings;
   private builder: Builder;
   private trackedClassesListBox: ListBox;
@@ -67,9 +70,7 @@ class Preferences {
     }
 
     // Create ui row for each item
-    this.mttData.forEach((data) => {
-      this.addRow(data.className, data.enabled, this.createIcon(data.icon));
-    });
+    this.mttData.forEach((data) => this.addRow(data));
     debug('initialized values');
   }
 
@@ -89,15 +90,19 @@ class Preferences {
       // Get the icon
       const icon = this.getIconFromWindow(windowId);
 
-      // Add row to list
-      this.addRow(className, true, icon);
-
-      // Add data to mttData
-      this.mttData.push({
+      const mttInfo = {
         className,
         enabled: true,
+        startHidden: false,
         icon: icon && base64_encode(icon.get_pixels()),
-      });
+        keybinding: [],
+      };
+
+      // Add row to list
+      this.addRow(mttInfo);
+
+      // Add data to mttData
+      this.mttData.push(mttInfo);
     } catch (ex) {
       debug(`exception: ${ex}`);
     }
@@ -112,7 +117,7 @@ class Preferences {
     this.widget.get_toplevel().destroy();
   }
 
-  private addRow(className: string, enabled: boolean, appIcon: Pixbuf | undefined): void {
+  private addRow(info: MttInfo): void {
     const rowBuilder = Builder.new_from_file(`${this.extension.path}/ui/row_template.glade`);
 
     // Get the template
@@ -120,32 +125,78 @@ class Preferences {
 
     // Set the class name
     const classNameLabel = rowBuilder.get_object('class-name-label') as Label;
-    classNameLabel.set_text(className);
+    classNameLabel.set_text(info.className);
 
     // Set the icon
-    if (appIcon) {
+    if (info.icon) {
       const iconImage = rowBuilder.get_object('icon-image') as Image;
-      iconImage.set_from_pixbuf(appIcon);
+      iconImage.set_from_pixbuf(this.createIcon(info.icon));
     }
 
     // Set the enabled switch
     const enabledSwitch = rowBuilder.get_object('enabled-switch') as Switch;
-    enabledSwitch.set_active(enabled);
+    enabledSwitch.set_active(info.enabled);
 
     // Connect to state set event for changes
     enabledSwitch.connect('state-set', (_, state) => {
-      this.mttData.forEach((data) => {
-        if (data.className === className) {
-          data.enabled = state;
-        }
-      });
+      const currentInfo = this.mttData.find((data) => data.className === info.className);
+      if (currentInfo) {
+        currentInfo.enabled = state;
+      }
     });
 
     // Connect remove event
     const removeButton = rowBuilder.get_object('remove-button') as Button;
     removeButton.connect('clicked', () => {
       this.trackedClassesListBox.remove(row);
-      this.mttData = this.mttData.filter((data) => data.className !== className);
+      this.mttData = this.mttData.filter((data) => data.className !== info.className);
+    });
+
+    // Add keybindings if exists
+    const keybindingsContainer = rowBuilder.get_object('keybinding-container') as Box;
+    if (info.keybinding && info.keybinding.length > 0) {
+      info.keybinding.forEach((key) => {
+        const label = new Label();
+        label.get_style_context().add_class('keycap');
+        label.get_style_context().add_class('mtt-keybinding');
+        label.set_text(key);
+        label.show_all();
+        keybindingsContainer.add_child(rowBuilder, label, null);
+      });
+    }
+    const keybindingButton = rowBuilder.get_object('keybinding-button') as Button;
+    keybindingButton.connect('clicked', () => {
+      const image = keybindingButton.get_child() as Image;
+      if (info.keybinding && info.keybinding.length > 0) {
+        debug('removing keybinding');
+        info.keybinding = [];
+        keybindingsContainer.get_children().forEach((child) => child.destroy());
+        image.set_from_icon_name('input-keyboard-symbolic', IconSize.BUTTON);
+        keybindingButton.set_tooltip_text('Add keyboard shortcut');
+      } else {
+        debug('adding keybinding');
+        info.keybinding = ['Ctrl', 'Alt', 'S'];
+        keybindingButton.set_tooltip_text('Remove keyboard shortcut');
+        info.keybinding.forEach((key) => {
+          const label = new Label();
+          label.get_style_context().add_class('keycap');
+          label.get_style_context().add_class('mtt-keybinding');
+          label.set_text(key);
+          image.set_from_icon_name('edit-undo-symbolic', IconSize.BUTTON);
+          keybindingsContainer.add_child(rowBuilder, label, null);
+          label.show_all();
+        });
+      }
+    });
+
+    // Set startHidden switch
+    const startHiddenToggle = rowBuilder.get_object('start-hidden-toggle') as ToggleButton;
+    startHiddenToggle.set_active(info.startHidden);
+    startHiddenToggle.connect('toggled', () => {
+      const currentInfo = this.mttData.find((data) => data.className === info.className);
+      if (currentInfo) {
+        currentInfo.startHidden = startHiddenToggle.get_active();
+      }
     });
 
     // Add to existing list
@@ -183,6 +234,9 @@ const init = (): void => {
 
 const buildPrefsWidget = (): any => {
   const prefs = new Preferences();
+  const styleProvider = new CssProvider();
+  styleProvider.load_from_path(`${prefs.extension.path}/stylesheet.css`);
+  StyleContext.add_provider_for_screen(prefs.widget.get_screen(), styleProvider, STYLE_PROVIDER_PRIORITY_USER);
   prefs.widget.show_all();
 
   return prefs.widget;

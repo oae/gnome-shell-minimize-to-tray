@@ -73,6 +73,7 @@ export class WindowListener {
       const xid = await guessWindowXID(windowActor.get_meta_window());
       if (xid) {
         await this.unTrackWindow(xid);
+        this.settings.set_string('extension-state', JSON.stringify(this.trackedWindows));
         debug(`window closed for class: ${xid}/${windowActor.get_meta_window().get_wm_class_instance()}`);
       }
     });
@@ -93,7 +94,7 @@ export class WindowListener {
     });
 
     // Watch for window-closed events
-    this.windowClosedListenerId = Global.get().window_manager.connect('minimize', async (_, windowActor) => {
+    this.windowMinimizedListenerId = Global.get().window_manager.connect('minimize', async (_, windowActor) => {
       if (
         windowActor.get_meta_window().get_window_type() !== WindowType.NORMAL ||
         !windowActor.get_meta_window().get_wm_class_instance()
@@ -209,11 +210,18 @@ export class WindowListener {
       this.trackedWindows = [
         ...this.trackedWindows,
         {
-          hidden: false,
+          hidden: mttInfo.startHidden,
           className,
           xid,
         },
       ];
+
+      // Check if start hidden flag is set
+      if (mttInfo.startHidden) {
+        debug(`start hidden flag is set for ${mttInfo.className}. Hiding it.`);
+        setTimeout(() => this.hideWindow(xid), 500);
+      }
+
       this.settings.set_string('extension-state', JSON.stringify(this.trackedWindows));
     }
   }
@@ -223,6 +231,7 @@ export class WindowListener {
     const trackedWindow = this.trackedWindows.find((trackedWindow) => trackedWindow.xid === xid);
     // Check if tracked window exist
     if (trackedWindow) {
+      debug(`tracked window is closed: ${JSON.stringify(trackedWindow)}`);
       const window = await this.getWindow(xid);
       if (window && trackedWindow.hidden == true) {
         this.showWindow(trackedWindow.xid);

@@ -6,6 +6,8 @@ export type MttInfo = {
   className: string;
   icon?: string;
   enabled: boolean;
+  startHidden: boolean;
+  keybinding: Array<string>;
 };
 
 export type MttWindow = {
