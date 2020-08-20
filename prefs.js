@@ -177,14 +177,6 @@ const Preferences = class Preferences {
     this.newApp.set_text('');
   }
 
-  onClose() {
-    this.widget.destroy();
-  }
-
-  show() {
-    this.widget.show_all();
-  }
-
   updateSettings() {
     this.settings.set_string('apps', JSON.stringify(this.apps));
   }
@@ -198,16 +190,10 @@ const Preferences = class Preferences {
 };
 
 function init() {
-  const provider = new Gtk.CssProvider();
-  provider.load_from_path(`${Me.dir.get_path()}/stylesheet.css`);
-  Gtk.StyleContext.add_provider_for_screen(
-    Gdk.Screen.get_default(),
-    provider,
-    Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
-  );
 }
 
 function buildPrefsWidget() {
   let prefs = new Preferences();
-  prefs.show();
+
+  return prefs.widget;
 }
