@@ -1,6 +1,12 @@
 import { Subprocess, SubprocessFlags, AsyncResult } from '@imports/Gio-2.0';
 import { Window } from '@imports/Meta-6';
-import { timeout_add, PRIORITY_DEFAULT, Source } from '@imports/GLib-2.0';
+import { timeout_add, PRIORITY_DEFAULT, Source, find_program_in_path } from '@imports/GLib-2.0';
+
+const REQUIRED_PROGRAMS = ['xwininfo', 'xdotool', 'xprop'];
+
+export const getMissingDeps = (): Array<string> => {
+  return REQUIRED_PROGRAMS.filter((program) => find_program_in_path(program) === null);
+};
 
 export const logger = (prefix: string) => (content: string): void => log(`[mtt] [${prefix}] ${content}`);
 
