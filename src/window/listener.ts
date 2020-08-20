@@ -1,3 +1,5 @@
+(imports.gi as any).versions.Wnck = '3.0';
+
 import { logger, guessWindowXID, setTimeout } from '../utils';
 import { Settings } from '@imports/Gio-2.0';
 import { Icon as StIcon, Bin } from '@imports/St-1.0';

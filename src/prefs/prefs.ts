@@ -1,3 +1,5 @@
+(imports.gi as any).versions.Wnck = '3.0';
+
 import { Colorspace, Pixbuf } from '@imports/GdkPixbuf-2.0';
 import { Settings } from '@imports/Gio-2.0';
 import { base64_decode, base64_encode } from '@imports/GLib-2.0';
