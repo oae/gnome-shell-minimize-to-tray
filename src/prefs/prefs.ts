@@ -19,11 +19,15 @@ import {
   StyleContext,
   ToggleButton,
   IconSize,
+  MenuButton,
+  Entry,
+  Popover,
 } from '@imports/Gtk-3.0';
 import { Screen, Window } from '@imports/Wnck-3.0';
 import { MttInfo } from '../index';
 import { getCurrentExtension, getCurrentExtensionSettings, ShellExtension } from '../shell';
 import { getWindowClassName, getWindowXid, logger } from '../utils';
+import { Event, keyval_name } from '@imports/Gdk-3.0';
 
 const debug = logger('prefs');
 
@@ -83,6 +87,11 @@ class Preferences {
 
       // Get the class name
       const className = await getWindowClassName(windowId);
+
+      // Check if we have a className
+      if (!className) {
+        return;
+      }
 
       // Check if class name is already included
       if (this.mttData.findIndex((data) => data.className === className) >= 0) {
@@ -156,8 +165,12 @@ class Preferences {
 
     // Add keybindings if exists
     const keybindingsContainer = rowBuilder.get_object('keybinding-container') as Box;
-    const keybindingButton = rowBuilder.get_object('keybinding-button') as Button;
+    const keybindingButton = rowBuilder.get_object('keybinding-button') as MenuButton;
     const keybindingButtonImage = keybindingButton.get_child() as Image;
+    const keybindingAddButton = rowBuilder.get_object('keybinding-add-button') as Button;
+    const keybindingEntry = rowBuilder.get_object('keybinding-entry') as Entry;
+    const keybindingPopover = rowBuilder.get_object('keybinding-popover') as Popover;
+
     if (info.keybinding && info.keybinding.length > 0) {
       info.keybinding.forEach((key) => {
         const label = new Label();
@@ -174,24 +187,51 @@ class Preferences {
       if (info.keybinding && info.keybinding.length > 0) {
         debug('removing keybinding');
         info.keybinding = [];
+        keybindingPopover.hide();
         keybindingsContainer.get_children().forEach((child) => child.destroy());
         keybindingButtonImage.set_from_icon_name('input-keyboard-symbolic', IconSize.BUTTON);
         keybindingButton.set_tooltip_text('Add keyboard shortcut');
       } else {
         debug('adding keybinding');
-        // TODO(alperen): get shortcuts from user and check if they are available
-        info.keybinding = ['Ctrl', 'Alt', 'S'];
-        keybindingButton.set_tooltip_text('Remove keyboard shortcut');
-        info.keybinding.forEach((key) => {
-          const label = new Label();
-          label.get_style_context().add_class('keycap');
-          label.get_style_context().add_class('mtt-keybinding');
-          label.set_text(key);
-          keybindingButtonImage.set_from_icon_name('edit-undo-symbolic', IconSize.BUTTON);
-          keybindingsContainer.add_child(rowBuilder, label, null);
-          label.show_all();
-        });
+        keybindingPopover.show();
       }
+    });
+    let keys = new Array<string>();
+    keybindingEntry.connect('key-press-event', (_, event: Event) => {
+      const key = keyval_name(event.get_keyval()[1]);
+      if (!key) {
+        return;
+      }
+
+      if (keys.indexOf(key) >= 0) {
+        return;
+      }
+
+      keys.push(key);
+      keybindingEntry.set_text(`${keys.join(' ')}`);
+    });
+    keybindingEntry.connect('key-release-event', () => {
+      keys = [];
+    });
+    keybindingAddButton.connect('clicked', () => {
+      const keybindingStr = keybindingEntry.get_text().trim();
+      keybindingPopover.hide();
+      keybindingEntry.set_text('');
+      if (!keybindingStr) {
+        return;
+      }
+      const keybindingArr = keybindingStr.split(' ');
+      info.keybinding = keybindingArr;
+      keybindingButton.set_tooltip_text('Remove keyboard shortcut');
+      info.keybinding.forEach((key) => {
+        const label = new Label();
+        label.get_style_context().add_class('keycap');
+        label.get_style_context().add_class('mtt-keybinding');
+        label.set_text(key);
+        keybindingButtonImage.set_from_icon_name('edit-undo-symbolic', IconSize.BUTTON);
+        keybindingsContainer.add_child(rowBuilder, label, null);
+        label.show_all();
+      });
     });
 
     // Set startHidden switch
