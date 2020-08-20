@@ -1,11 +1,11 @@
 import './styles/stylesheet.scss';
 
-import { logger } from './utils';
-import { WindowListener } from './window/listener';
+import { logger } from '@mtt/utils';
+import { WindowListener } from '@mtt/window/listener';
 
 const debug = logger('extension');
 
-export class MttExtension {
+class MttExtension {
   private listener: WindowListener;
 
   constructor() {

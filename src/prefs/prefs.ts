@@ -1,5 +1,4 @@
-(imports.gi as any).versions.Wnck = '3.0';
-
+import { Event, keyval_name } from '@imports/Gdk-3.0';
 import { Colorspace, Pixbuf } from '@imports/GdkPixbuf-2.0';
 import { Settings } from '@imports/Gio-2.0';
 import { base64_decode, base64_encode } from '@imports/GLib-2.0';
@@ -8,26 +7,25 @@ import {
   Builder,
   Button,
   CssProvider,
+  Entry,
   IconLookupFlags,
+  IconSize,
   IconTheme,
   Image,
   Label,
   ListBox,
   ListBoxRow,
+  MenuButton,
+  Popover,
+  StyleContext,
   STYLE_PROVIDER_PRIORITY_USER,
   Switch,
-  StyleContext,
   ToggleButton,
-  IconSize,
-  MenuButton,
-  Entry,
-  Popover,
 } from '@imports/Gtk-3.0';
 import { Screen, Window } from '@imports/Wnck-3.0';
-import { MttInfo } from '../index';
-import { getCurrentExtension, getCurrentExtensionSettings, ShellExtension } from '../shell';
-import { getWindowClassName, getWindowXid, logger } from '../utils';
-import { Event, keyval_name } from '@imports/Gdk-3.0';
+import { MttInfo } from '@mtt/index';
+import { getCurrentExtension, getCurrentExtensionSettings, ShellExtension } from '@mtt/shell';
+import { getWindowClassName, getWindowXid, logger } from '@mtt/utils';
 
 const debug = logger('prefs');
 

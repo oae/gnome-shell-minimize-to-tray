@@ -1,14 +1,12 @@
-(imports.gi as any).versions.Wnck = '3.0';
-
-import { logger, guessWindowXID, setTimeout } from '../utils';
-import { Settings } from '@imports/Gio-2.0';
-import { Icon as StIcon, Bin } from '@imports/St-1.0';
-import { getCurrentExtensionSettings } from '../shell';
-import { MttInfo, MttWindow } from '../index';
-import { WindowTracker, Global } from '@imports/Shell-0.1';
-import { Window, WindowType } from '@imports/Meta-6';
-import { Screen, Window as WnckWindow } from '@imports/Wnck-3.0';
 import { ActorAlign } from '@imports/Clutter-6';
+import { Settings } from '@imports/Gio-2.0';
+import { Window, WindowType } from '@imports/Meta-6';
+import { Global, WindowTracker } from '@imports/Shell-0.1';
+import { Bin, Icon as StIcon } from '@imports/St-1.0';
+import { Screen, Window as WnckWindow } from '@imports/Wnck-3.0';
+import { MttInfo, MttWindow } from '@mtt/index';
+import { getCurrentExtensionSettings } from '@mtt/shell';
+import { guessWindowXID, logger, setTimeout } from '@mtt/utils';
 
 const { Button } = imports.ui.panelMenu;
 const { panel } = imports.ui.main;
