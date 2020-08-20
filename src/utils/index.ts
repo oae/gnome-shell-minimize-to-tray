@@ -48,9 +48,13 @@ export const execute = async (command: string): Promise<string> => {
   });
 };
 
-export const getWindowClassName = async (xid: string): Promise<string> => {
-  const xpropOut = await execute(`xprop -id ${xid} WM_CLASS`);
-  return xpropOut.split('=')[1].split(',')[0].trim().split('"')[1];
+export const getWindowClassName = async (xid: string): Promise<string | undefined> => {
+  if (xid) {
+    const xpropOut = await execute(`xprop -id ${xid} WM_CLASS`);
+    if (xpropOut != null) {
+      return xpropOut.split('=')[1].split(',')[0].trim().split('"')[1];
+    }
+  }
 };
 
 export const getWindowXid = async (): Promise<string> => {
