@@ -83,6 +83,10 @@ class Preferences {
       // Get the window id and the window
       const windowId = await getWindowXid();
 
+      if (!windowId) {
+        return;
+      }
+
       // Get the class name
       const className = await getWindowClassName(windowId);
 

@@ -41,7 +41,7 @@ export class WindowListener {
     const existingWindows = Global.get().get_window_actors();
     for (let i = 0; i < existingWindows.length; i++) {
       const window = existingWindows[i].get_meta_window();
-      if (!window.get_wm_class_instance() || window.get_window_type() != WindowType.NORMAL) {
+      if (this.shouldIgnoreWindow(window)) {
         continue;
       }
       const xid = await guessWindowXID(window);
@@ -52,7 +52,7 @@ export class WindowListener {
 
     // Watch for window-opened events
     this.windowOpenedListenerId = Global.get().display.connect('window-created', async (_, window) => {
-      if (window.get_window_type() !== WindowType.NORMAL || !window.get_wm_class_instance()) {
+      if (this.shouldIgnoreWindow(window)) {
         return;
       }
       const xid = await guessWindowXID(window);
@@ -64,17 +64,14 @@ export class WindowListener {
 
     // Watch for window-closed events
     this.windowClosedListenerId = Global.get().window_manager.connect('destroy', async (_, windowActor) => {
-      if (
-        windowActor.get_meta_window().get_window_type() !== WindowType.NORMAL ||
-        !windowActor.get_meta_window().get_wm_class_instance()
-      ) {
+      const window = windowActor.get_meta_window();
+      if (this.shouldIgnoreWindow(window)) {
         return;
       }
-      const xid = await guessWindowXID(windowActor.get_meta_window());
+      const xid = await guessWindowXID(window);
       if (xid) {
         await this.unTrackWindow(xid);
         this.settings.set_string('extension-state', JSON.stringify(this.trackedWindows));
-        debug(`window closed for class: ${xid}/${windowActor.get_meta_window().get_wm_class_instance()}`);
       }
     });
 
@@ -83,7 +80,7 @@ export class WindowListener {
       const existingWindows = Global.get().get_window_actors();
       for (let i = 0; i < existingWindows.length; i++) {
         const window = existingWindows[i].get_meta_window();
-        if (!window.get_wm_class_instance() || window.get_window_type() != WindowType.NORMAL) {
+        if (this.shouldIgnoreWindow(window)) {
           continue;
         }
         const xid = await guessWindowXID(window);
@@ -93,20 +90,18 @@ export class WindowListener {
       }
     });
 
-    // Watch for window-closed events
+    // Watch for window-minimized events
     this.windowMinimizedListenerId = Global.get().window_manager.connect('minimize', async (_, windowActor) => {
-      if (
-        windowActor.get_meta_window().get_window_type() !== WindowType.NORMAL ||
-        !windowActor.get_meta_window().get_wm_class_instance()
-      ) {
+      const window = windowActor.get_meta_window();
+      if (this.shouldIgnoreWindow(window)) {
         return;
       }
-      const xid = await guessWindowXID(windowActor.get_meta_window());
+      const xid = await guessWindowXID(window);
       if (xid) {
-        const window = this.trackedWindows.find((trackedWindow) => trackedWindow.xid === xid);
-        if (window) {
+        const trackedWindow = this.trackedWindows.find((trackedWindow) => trackedWindow.xid === xid);
+        if (trackedWindow) {
           this.hideWindow(xid);
-          debug(`window is minimized for class: ${xid}/${windowActor.get_meta_window().get_wm_class_instance()}`);
+          debug(`window is minimized for class: ${xid}/${window.get_wm_class_instance()}`);
         }
       }
     });
@@ -144,6 +139,10 @@ export class WindowListener {
     debug('stopped listening for windows');
   }
 
+  private shouldIgnoreWindow(window: Window): boolean {
+    return !window || !window.get_wm_class_instance() || window.get_window_type() != WindowType.NORMAL;
+  }
+
   private async initExtensionState(): Promise<void> {
     try {
       const oldState: Array<MttWindow> = JSON.parse(this.settings.get_string('extension-state'));
@@ -152,7 +151,7 @@ export class WindowListener {
       for (let i = 0; i < oldState.length; i++) {
         const oldWindowState = oldState[i];
         const window = await this.getWindow(oldWindowState.xid);
-        if (!window || !window.get_wm_class_instance() || window.get_window_type() != WindowType.NORMAL) {
+        if (!window || this.shouldIgnoreWindow(window)) {
           continue;
         }
 
@@ -260,12 +259,12 @@ export class WindowListener {
     const existingWindows = Global.get().get_window_actors();
     for (let i = 0; i < existingWindows.length; i++) {
       const window = existingWindows[i].get_meta_window();
-      if (window.get_window_type() !== WindowType.NORMAL || !window.get_wm_class_instance()) {
+      if (this.shouldIgnoreWindow(window)) {
         continue;
       }
-      const xid = await guessWindowXID(existingWindows[i].get_meta_window());
+      const xid = await guessWindowXID(window);
       if (xid) {
-        await this.trackWindow(xid, existingWindows[i].get_meta_window());
+        await this.trackWindow(xid, window);
       }
     }
   }
@@ -358,6 +357,9 @@ export class WindowListener {
     const currentWindowsActors = Global.get().get_window_actors();
     for (let i = 0; i < currentWindowsActors.length; i++) {
       const currentWindow = currentWindowsActors[i].get_meta_window();
+      if (this.shouldIgnoreWindow(currentWindow)) {
+        continue;
+      }
       const currentXid = await guessWindowXID(currentWindow);
       if (currentXid === xid) {
         return currentWindow;

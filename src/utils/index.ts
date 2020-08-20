@@ -10,6 +10,8 @@ export const getMissingDeps = (): Array<string> => {
 
 export const logger = (prefix: string) => (content: string): void => log(`[mtt] [${prefix}] ${content}`);
 
+const debug = logger('utils');
+
 export const setInterval = (func: () => any, millis: number): number => {
   const id = timeout_add(PRIORITY_DEFAULT, millis, () => {
     func();
@@ -55,16 +57,24 @@ export const execute = async (command: string): Promise<string> => {
 };
 
 export const getWindowClassName = async (xid: string): Promise<string | undefined> => {
-  if (xid) {
-    const xpropOut = await execute(`xprop -id ${xid} WM_CLASS`);
-    if (xpropOut != null) {
-      return xpropOut.split('=')[1].split(',')[0].trim().split('"')[1];
+  try {
+    if (xid) {
+      const xpropOut = await execute(`xprop -id ${xid} WM_CLASS`);
+      if (xpropOut != null) {
+        return xpropOut.split('=')[1].split(',')[0].trim().split('"')[1];
+      }
     }
+  } catch (ex) {
+    debug(`error occured while getting window className: ${ex}`);
   }
 };
 
-export const getWindowXid = async (): Promise<string> => {
-  return execute('xdotool selectwindow');
+export const getWindowXid = async (): Promise<string | undefined> => {
+  try {
+    return execute('xdotool selectwindow');
+  } catch (ex) {
+    debug(`error occured while getting windowXid: ${ex}`);
+  }
 };
 
 /**
@@ -74,9 +84,13 @@ export const getWindowXid = async (): Promise<string> => {
  */
 export const guessWindowXID = async (window: Window): Promise<string | undefined> => {
   // We cache the result so we don't need to redetect.
-  // if (window._mttWindowId) {
-  //   return window._mttWindowId;
-  // }
+  if (!window) {
+    return;
+  }
+
+  if ((window as any)._mttWindowId) {
+    return (window as any)._mttWindowId;
+  }
 
   /**
    * If window title has non-utf8 characters, get_description() complains
@@ -86,66 +100,78 @@ export const guessWindowXID = async (window: Window): Promise<string | undefined
   try {
     const m = window.get_description().match(/0x[0-9a-f]+/);
     if (m && m[0]) {
-      // return (win._pixelSaverWindowID = m[0]);
+      (window as any)._mttWindowId = m[0];
+
       return m[0];
     }
-  } catch (err) {}
+  } catch (err) {
+    debug('failed to get xid from window description, now trying xwininfo');
+  }
 
   // use xwininfo, take first child.
   const act = window.get_compositor_private();
   const xwindow = act && act['x-window'];
   if (xwindow) {
-    const xwininfo = await execute(`xwininfo -children -id 0x${xwindow}`);
-    if (xwininfo[0]) {
-      const str = xwininfo[1].toString();
+    try {
+      const xwininfo = await execute(`xwininfo -children -id 0x${xwindow}`);
+      if (xwininfo[0]) {
+        const str = xwininfo[1].toString();
 
-      /**
-       * The X ID of the window is the one preceding the target window's title.
-       * This is to handle cases where the window has no frame and so
-       * act['x-window'] is actually the X ID we want, not the child.
-       */
-      const regexp = new RegExp(`(0x[0-9a-f]+) +"${window.title}"`);
-      let m = str.match(regexp);
-      if (m && m[1]) {
-        // return (win._pixelSaverWindowID = m[1]);
-        return m[1];
-      }
+        /**
+         * The X ID of the window is the one preceding the target window's title.
+         * This is to handle cases where the window has no frame and so
+         * act['x-window'] is actually the X ID we want, not the child.
+         */
+        const regexp = new RegExp(`(0x[0-9a-f]+) +"${window.title}"`);
+        let m = str.match(regexp);
+        if (m && m[1]) {
+          (window as any)._mttWindowId = m[1];
+          return m[1];
+        }
 
-      // Otherwise, just grab the child and hope for the best
-      m = str.split(/child(?:ren)?:/)[1].match(/0x[0-9a-f]+/);
-      if (m && m[0]) {
-        // return (win._pixelSaverWindowID = m[0]);
-        return m[0];
+        // Otherwise, just grab the child and hope for the best
+        m = str.split(/child(?:ren)?:/)[1].match(/0x[0-9a-f]+/);
+        if (m && m[0]) {
+          (window as any)._mttWindowId = m[0];
+
+          return m[0];
+        }
       }
+    } catch (err) {
+      debug('failed to get xid from xwininfo, now trying xprop');
     }
   }
 
   // Try enumerating all available windows and match the title. Note that this
   // may be necessary if the title contains special characters and `x-window`
   // is not available.
-  const result = await execute('xprop -root _NET_CLIENT_LIST');
-  if (result[0]) {
-    const str = result[1].toString();
+  try {
+    const result = await execute('xprop -root _NET_CLIENT_LIST');
+    if (result[0]) {
+      const str = result[1].toString();
 
-    // Get the list of window IDs.
-    const windowList = str.match(/0x[0-9a-f]+/g);
+      // Get the list of window IDs.
+      const windowList = str.match(/0x[0-9a-f]+/g);
 
-    if (windowList) {
-      // For each window ID, check if the title matches the desired title.
-      for (let i = 0; i < windowList.length; ++i) {
-        const result = await execute(`xprop -id "${windowList[i]}" _NET_WM_NAME`);
+      if (windowList) {
+        // For each window ID, check if the title matches the desired title.
+        for (let i = 0; i < windowList.length; ++i) {
+          const result = await execute(`xprop -id "${windowList[i]}" _NET_WM_NAME`);
 
-        if (result[0]) {
-          const output = result[1].toString();
+          if (result[0]) {
+            const output = result[1].toString();
 
-          const title = output.match(/_NET_WM_NAME(\(\w+\))? = "(([^\\"]|\\"|\\\\)*)"/);
+            const title = output.match(/_NET_WM_NAME(\(\w+\))? = "(([^\\"]|\\"|\\\\)*)"/);
 
-          // Is this our guy?
-          if (title && title[2] == window.title) {
-            return windowList[i];
+            // Is this our guy?
+            if (title && title[2] == window.title) {
+              return windowList[i];
+            }
           }
         }
       }
     }
+  } catch (err) {
+    debug('failed to get xid from xprop too. giving up.');
   }
 };
