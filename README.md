@@ -35,7 +35,12 @@ ln -s "$PWD/dist" "$HOME/.local/share/gnome-shell/extensions/minimize-to-tray@el
 ## Usage
 
 - From the extension settings, you can click add button and select any opened window to put them in to tray
-  ![SS](https://i.imgur.com/dZl4J9x.png)
+- There are three options for each application.
+  - **Change active status**: You can disable the minimization for specific application
+  - **Minimize window on start**: Whenever a new window opens for the application, it will automatically hide and minimize to tray
+  - **Keyboard shorcut support**: This adds global keybindings to application window visibility. It currently supports `<ctrl>`, `<alt>`, `<shift>` and `0-9`, `a-z` keys. If there are are more than one window for specific application, it will focus to last used window.
+  
+  ![SS](https://i.imgur.com/78JUYQI.png)
 
 ## Development
 
