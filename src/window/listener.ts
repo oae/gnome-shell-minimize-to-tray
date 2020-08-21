@@ -291,7 +291,7 @@ export class WindowListener {
     // For each new className, create keybinding
     this.mttData.forEach((mttInfo) => {
       // Check if keyboard shortcut is assigned
-      if (mttInfo.keybinding && mttInfo.keybinding.length > 0) {
+      if (mttInfo.enabled && mttInfo.keybinding && mttInfo.keybinding.length > 0) {
         try {
           this.keyManager.listenFor(mttInfo.keybinding.join(''), () => {
             const windows = this.trackedWindows.filter(
