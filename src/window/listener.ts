@@ -7,6 +7,7 @@ import { Screen, Window as WnckWindow } from '@imports/Wnck-3.0';
 import { MttInfo, MttWindow } from '@mtt/index';
 import { getCurrentExtensionSettings } from '@mtt/shell';
 import { guessWindowXID, logger, setTimeout } from '@mtt/utils';
+import { KeyManager } from '@mtt/shell/keyManager';
 
 const { Button } = imports.ui.panelMenu;
 const { panel } = imports.ui.main;
@@ -14,6 +15,7 @@ const { panel } = imports.ui.main;
 const debug = logger(_('window-listener'));
 
 export class WindowListener {
+  private keyManager: KeyManager;
   private settings: Settings;
   private mttData: Array<MttInfo>;
   private trackedWindows: Array<MttWindow>;
@@ -24,6 +26,7 @@ export class WindowListener {
 
   constructor() {
     this.settings = getCurrentExtensionSettings();
+    this.keyManager = new KeyManager();
     this.mttData = [];
     this.trackedWindows = [];
 
@@ -105,6 +108,9 @@ export class WindowListener {
         }
       }
     });
+
+    // Rebind keyboard shortcuts
+    this.rebindShortcuts();
 
     debug('started listening for windows');
   }
@@ -212,6 +218,7 @@ export class WindowListener {
           hidden: mttInfo.startHidden,
           className,
           xid,
+          lastUpdatedAt: new Date(),
         },
       ];
 
@@ -241,21 +248,26 @@ export class WindowListener {
   }
 
   private async onSettingsChanged(): Promise<void> {
+    // Load mtt state from settings
     this.initValues();
 
+    // Find currently tracked window classes
     const trackedClassNames = this.mttData
       .filter((mttInfo) => mttInfo.enabled === true)
       .map((mttInfo) => mttInfo.className);
 
+    // Get the removed windows from tracked classnames
     const nonExistingWindows = this.trackedWindows.filter(
       (trackedWindow) => trackedClassNames.indexOf(trackedWindow.className) < 0,
     );
 
+    // Untrack them
     for (let i = 0; i < nonExistingWindows.length; i++) {
       const window = nonExistingWindows[i];
       await this.unTrackWindow(window.xid);
     }
 
+    // Track the new windows
     const existingWindows = Global.get().get_window_actors();
     for (let i = 0; i < existingWindows.length; i++) {
       const window = existingWindows[i].get_meta_window();
@@ -267,6 +279,40 @@ export class WindowListener {
         await this.trackWindow(xid, window);
       }
     }
+
+    // Rebind keyboard shortcuts
+    this.rebindShortcuts();
+  }
+
+  private rebindShortcuts(): void {
+    // Stop old listeners
+    this.keyManager.stopListening();
+
+    // For each new className, create keybinding
+    this.mttData.forEach((mttInfo) => {
+      // Check if keyboard shortcut is assigned
+      if (mttInfo.keybinding && mttInfo.keybinding.length > 0) {
+        try {
+          this.keyManager.listenFor(mttInfo.keybinding.join(''), () => {
+            const windows = this.trackedWindows.filter(
+              (trackedWindow) => trackedWindow.className === mttInfo.className,
+            );
+            if (windows.length > 0) {
+              const windowTobeToggled = windows
+                .slice()
+                .sort((a, b) => b.lastUpdatedAt.getTime() - a.lastUpdatedAt.getTime())[0];
+              if (windowTobeToggled.hidden == true) {
+                this.showWindow(windowTobeToggled.xid);
+              } else {
+                this.hideWindow(windowTobeToggled.xid);
+              }
+            }
+          });
+        } catch (ex) {
+          debug('failed to add keybinding');
+        }
+      }
+    });
   }
 
   private addTray(xid: string, icon: StIcon): any {
@@ -329,6 +375,7 @@ export class WindowListener {
       wnckWindow.set_skip_tasklist(true);
       wnckWindow.minimize();
       window.hidden = true;
+      window.lastUpdatedAt = new Date();
     }
   }
 
@@ -350,6 +397,7 @@ export class WindowListener {
       wnckWindow.set_skip_tasklist(false);
       wnckWindow.unminimize(Math.floor(Date.now() / 1000));
       window.hidden = false;
+      window.lastUpdatedAt = new Date();
     }
   }
 

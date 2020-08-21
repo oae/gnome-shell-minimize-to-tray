@@ -1,4 +1,13 @@
-import { Event, keyval_name } from '@imports/Gdk-3.0';
+import {
+  Event,
+  keyval_name,
+  KEY_Control_L,
+  KEY_Control_R,
+  KEY_Shift_L,
+  KEY_Alt_L,
+  KEY_Shift_R,
+  KEY_Alt_R,
+} from '@imports/Gdk-3.0';
 import { Colorspace, Pixbuf } from '@imports/GdkPixbuf-2.0';
 import { Settings } from '@imports/Gio-2.0';
 import { base64_decode, base64_encode } from '@imports/GLib-2.0';
@@ -165,7 +174,7 @@ class Preferences {
       this.mttData = this.mttData.filter((data) => data.className !== info.className);
     });
 
-    // Add keybindings if exists
+    // Read keybinding widgets from builder
     const keybindingsContainer = rowBuilder.get_object('keybinding-container') as Box;
     const keybindingButton = rowBuilder.get_object('keybinding-button') as MenuButton;
     const keybindingButtonImage = keybindingButton.get_child() as Image;
@@ -173,6 +182,7 @@ class Preferences {
     const keybindingEntry = rowBuilder.get_object('keybinding-entry') as Entry;
     const keybindingPopover = rowBuilder.get_object('keybinding-popover') as Popover;
 
+    // If keybinding is assigned to info, then show it in ui
     if (info.keybinding && info.keybinding.length > 0) {
       info.keybinding.forEach((key) => {
         const label = new Label();
@@ -185,6 +195,8 @@ class Preferences {
         keybindingsContainer.add_child(rowBuilder, label, null);
       });
     }
+
+    // Clear and toggle popover on button click
     keybindingButton.connect('clicked', () => {
       if (info.keybinding && info.keybinding.length > 0) {
         debug('removing keybinding');
@@ -198,32 +210,61 @@ class Preferences {
         keybindingPopover.show();
       }
     });
-    let keys = new Array<string>();
+
+    // Detect keys
+    let keys = new Array<{ value: number; name: string }>();
     keybindingEntry.connect('key-press-event', (_, event: Event) => {
-      const key = keyval_name(event.get_keyval()[1]);
-      if (!key) {
+      const keyVal = event.get_keyval()[1];
+      let keyName = keyval_name(keyVal);
+      if (!keyName) {
+        return;
+      }
+      debug(`pressed key: ${keyVal}/${keyName}`);
+
+      // Check if pressed is supported or not
+      if (this.isSupportedModifier(keyVal)) {
+        try {
+          keyName = `<${keyName.split('_')[0].toLowerCase()}>`;
+        } catch (ex) {
+          return;
+        }
+      } else if (!this.isSupportedAlphaNumericKey(keyVal)) {
         return;
       }
 
-      if (keys.indexOf(key) >= 0) {
+      if (keys.findIndex((key) => key.value == keyVal) >= 0) {
         return;
       }
 
-      keys.push(key);
-      keybindingEntry.set_text(`${keys.join(' ')}`);
+      keys.push({
+        value: keyVal,
+        name: keyName,
+      });
+      (keybindingEntry as any).keys = [...keys];
+      keybindingEntry.set_text(`${keys.map((key) => key.name).join(' ')}`);
     });
+
+    // Clear keys on key release
     keybindingEntry.connect('key-release-event', () => {
       keys = [];
     });
+
+    // When clicked to `Done` button, save the keybinding
     keybindingAddButton.connect('clicked', () => {
-      const keybindingStr = keybindingEntry.get_text().trim();
+      const keybindingArr = [...((keybindingEntry as any).keys as [{ value: number; name: string }])];
+      (keybindingEntry as any).keys = [];
       keybindingPopover.hide();
       keybindingEntry.set_text('');
-      if (!keybindingStr) {
+      if (!keybindingArr) {
         return;
       }
-      const keybindingArr = keybindingStr.split(' ');
-      info.keybinding = keybindingArr;
+      if (
+        keybindingArr.findIndex((key) => this.isSupportedModifier(key.value)) < 0 ||
+        keybindingArr.findIndex((key) => this.isSupportedAlphaNumericKey(key.value)) < 0
+      ) {
+        return;
+      }
+      info.keybinding = keybindingArr.map((key) => key.name);
       keybindingButton.set_tooltip_text('Remove keyboard shortcut');
       info.keybinding.forEach((key) => {
         const label = new Label();
@@ -248,6 +289,22 @@ class Preferences {
 
     // Add to existing list
     this.trackedClassesListBox.insert(row, 0);
+  }
+
+  private isSupportedModifier(keyVal: number): boolean {
+    const supportedModifiers = [KEY_Control_L, KEY_Control_R, KEY_Shift_L, KEY_Shift_R, KEY_Alt_L, KEY_Alt_R];
+
+    return supportedModifiers.indexOf(keyVal) >= 0;
+  }
+
+  private isSupportedAlphaNumericKey(keyVal: number): boolean {
+    const supportedAlphaNumericalRange = [
+      [65, 90], // uppercase alphabet
+      [97, 122], // lowercase alphabet,
+      [48, 57], // digits
+    ];
+
+    return supportedAlphaNumericalRange.findIndex((range) => keyVal >= range[0] && keyVal <= range[1]) >= 0;
   }
 
   private createIcon(iconBase64?: string): Pixbuf | undefined {

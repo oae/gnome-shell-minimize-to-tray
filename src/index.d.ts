@@ -14,6 +14,7 @@ export type MttWindow = {
   xid: string;
   hidden: boolean;
   className: string;
+  lastUpdatedAt: Date;
 };
 
 export {};
