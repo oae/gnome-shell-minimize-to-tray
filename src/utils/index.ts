@@ -1,6 +1,6 @@
-import { Subprocess, SubprocessFlags, AsyncResult } from '@imports/Gio-2.0';
+import { AsyncResult, Subprocess, SubprocessFlags } from '@imports/Gio-2.0';
+import { find_program_in_path, PRIORITY_DEFAULT, Source, timeout_add } from '@imports/GLib-2.0';
 import { Window } from '@imports/Meta-6';
-import { timeout_add, PRIORITY_DEFAULT, Source, find_program_in_path } from '@imports/GLib-2.0';
 
 const REQUIRED_PROGRAMS = ['xwininfo', 'xdotool', 'xprop'];
 

@@ -8,9 +8,10 @@
     "noImplicitThis": true,
     "alwaysStrict": true,
     "baseUrl": "./src/",
+    "moduleResolution": "Node",
     "paths": {
       "@imports/*": ["../@types/Gjs/*"],
-      "@mtt/*": ["*"]
+      "@mtt/*": ["./*"]
     }
   }
 }

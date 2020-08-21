@@ -1,5 +1,5 @@
-import { Global, ActionMode } from '@imports/Shell-0.1';
-import { KeyBindingFlags, KeyBindingAction, external_binding_name_for_action } from '@imports/Meta-6';
+import { external_binding_name_for_action, KeyBindingAction, KeyBindingFlags } from '@imports/Meta-6';
+import { ActionMode, Global } from '@imports/Shell-0.1';
 import { logger } from '@mtt/utils';
 const { wm } = imports.ui.main;
 

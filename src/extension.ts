@@ -1,7 +1,7 @@
+import { getMissingDeps, logger } from '@mtt/utils';
+import { WindowListener } from '@mtt/window/listener';
 import './styles/stylesheet.scss';
 
-import { logger, getMissingDeps } from '@mtt/utils';
-import { WindowListener } from '@mtt/window/listener';
 const debug = logger('extension');
 
 class MttExtension {

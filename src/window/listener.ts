@@ -6,8 +6,8 @@ import { Bin, Icon as StIcon } from '@imports/St-1.0';
 import { Screen, Window as WnckWindow } from '@imports/Wnck-3.0';
 import { MttInfo, MttWindow } from '@mtt/index';
 import { getCurrentExtensionSettings } from '@mtt/shell';
-import { guessWindowXID, logger, setTimeout } from '@mtt/utils';
 import { KeyManager } from '@mtt/shell/keyManager';
+import { guessWindowXID, logger, setTimeout } from '@mtt/utils';
 
 const { Button } = imports.ui.panelMenu;
 const { panel } = imports.ui.main;

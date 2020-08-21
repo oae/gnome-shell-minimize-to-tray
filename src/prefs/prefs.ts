@@ -1,12 +1,12 @@
 import {
   Event,
   keyval_name,
+  KEY_Alt_L,
+  KEY_Alt_R,
   KEY_Control_L,
   KEY_Control_R,
   KEY_Shift_L,
-  KEY_Alt_L,
   KEY_Shift_R,
-  KEY_Alt_R,
 } from '@imports/Gdk-3.0';
 import { Colorspace, Pixbuf } from '@imports/GdkPixbuf-2.0';
 import { Settings } from '@imports/Gio-2.0';
