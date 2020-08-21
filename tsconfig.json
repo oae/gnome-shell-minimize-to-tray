@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
-    "lib": ["es6"],
+    "lib": ["ES2017"],
+    "target": "ES2017",
     "strict": true,
     "noImplicitAny": false,
     "strictNullChecks": true,
@@ -9,7 +10,7 @@
     "baseUrl": "./src/",
     "paths": {
       "@imports/*": ["../@types/Gjs/*"],
-      "@mtt/*": ["*"],
+      "@mtt/*": ["*"]
     }
   }
 }
