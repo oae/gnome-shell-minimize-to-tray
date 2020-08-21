@@ -1,4 +1,6 @@
 import typescript from '@rollup/plugin-typescript';
+import { nodeResolve } from '@rollup/plugin-node-resolve';
+import commonjs from '@rollup/plugin-commonjs';
 import scss from 'rollup-plugin-scss';
 import copy from 'rollup-plugin-copy';
 
@@ -41,6 +43,10 @@ export default [
     },
     external,
     plugins: [
+      commonjs(),
+      nodeResolve({
+        preferBuiltins: false,
+      }),
       typescript({
         tsconfig: './tsconfig.json',
       }),
@@ -70,6 +76,10 @@ export default [
     },
     external,
     plugins: [
+      commonjs(),
+      nodeResolve({
+        preferBuiltins: false,
+      }),
       typescript({
         tsconfig: './tsconfig.json',
       }),
