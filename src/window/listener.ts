@@ -104,7 +104,6 @@ export class WindowListener {
         const trackedWindow = this.trackedWindows.find((trackedWindow) => trackedWindow.xid === xid);
         if (trackedWindow) {
           this.hideWindow(xid);
-          debug(`window is minimized for class: ${xid}/${window.get_wm_class_instance()}`);
         }
       }
     });
@@ -142,6 +141,10 @@ export class WindowListener {
 
     // Untrack windows
     this.trackedWindows.forEach((trackedWindow) => this.unTrackWindow(trackedWindow.xid));
+
+    // Disable keybindings.
+    this.keyManager.stopListening();
+
     debug('stopped listening for windows');
   }
 
