@@ -126,18 +126,34 @@ var AppWindow = class AppWindow {
     const box = new St.BoxLayout();
 
     box.add(this.icon);
-    this.button.add_child(box);
-    this.button.connect('button-press-event', () => {
-      this.toggle.call(this);
-      mtt.windowListener.updateState();
-    });
+    if(this.button.add_child) {
+      this.button.add_child(box);
+      this.button.connect('button-press-event', () => {
+        this.toggle.call(this);
+        mtt.windowListener.updateState();
+      });
+    }
+    else {
+      this.button.actor.add_child(box);
+      this.button.actor.connect('button-press-event', () => {
+        this.toggle.call(this);
+        mtt.windowListener.updateState();
+      });
+    }
 
     Main.panel.addToStatusArea(`${this.idInDec}:${this.pid}:${this.name}`, this.button, 0, 'right');
   }
 
   removeTray() {
-    this.button && this.button.destroy();
-    this.button = null;
+    if(!this.button) {
+      return;
+    }
+    if(this.button.actor) {
+      this.button.actor.destroy();
+    }
+    else {
+      this.button.destroy();
+    }
   }
 
   attach() {
